@@ -1,0 +1,2 @@
+#!/bin/sh -e
+exec emacs -nw -Q -L . -l ert -l org-blog --eval '(ert t)'
