@@ -22,6 +22,8 @@
 
 (provide 'org-blog)
 
+(require 'org-blog-buffer)
+
 (define-minor-mode org-blog-mode
   "Toggle org-blog mode.
 
