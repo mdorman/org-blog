@@ -82,29 +82,89 @@ retain the maximum flexibility for further transformation."
     (when v
       (split-string v "\\( *, *\\)" t))))
 
+(defconst mapping (list (cons :blog "POST_BLOG")
+                        (cons :category "POST_CATEGORY")
+                        (cons :date "DATE")
+                        (cons :excerpt "DESCRIPTION")
+                        (cons :id "POST_ID")
+                        (cons :link "POST_LINK")
+                        (cons :name "POST_NAME")
+                        (cons :parent "POST_PARENT")
+                        (cons :status "POST_STATUS")
+                        (cons :tags "KEYWORDS")
+                        (cons :title "TITLE")
+                        (cons :type "POST_TYPE")))
+
+(defun org-blog-buffer-merge-post (merge)
+  "Merge a post into a buffer.
+
+Given a post structure (presumably returned from the server),
+update the buffer to reflect the values it contains."
+  (save-excursion
+    (save-restriction
+      ;; Get the current values
+      (let ((current (org-blog-buffer-extract-post)))
+        (mapc
+         (lambda (item)
+           (let ((k (car item))
+                 (v (cdr item))
+                 val existing)
+             (when (cdr (assq k mapping))
+               (setq val (cond ((eq v nil)
+                                (print "setting val to nil")
+                                nil)
+                               ((eq k :date)
+                                (format-time-string "[%Y-%m-%d %a %H:%M]" (car v)))
+                               ((listp v)
+                                (mapconcat 'identity v ", "))
+                               ((stringp v) 
+                                v)
+                               (t
+                                "default")))
+               (goto-char (point-min))
+               ;; (print (format "Comparison for %s is %s against %s" k v (cdr (assq k current))))
+               (cond
+                ;; Inserting a new keyword
+                ((eq (cdr (assq k current)) nil)
+                 (when val
+                   (insert (concat "#+" (cdr (assq k mapping)) ": " val "\n"))))
+                ;; Updating an existing keyword
+                ((not (equal (cdr (assq k current)) val))
+                 (let ((re (org-make-options-regexp (list (cdr (assq k mapping))) nil))
+                       (case-fold-search t))
+                   (re-search-forward re nil t)
+                   (replace-match (concat "#+" (cdr (assq k mapping)) ": " val) t t)))))))
+         ;; Reverse sort fields to insert alphabetically
+         (sort
+          (copy-alist merge)
+          '(lambda (a b)
+             (string< (car b) (car a)))))))))
+
 ;;;; Run tests if ert is loaded
 (when (featurep 'ert)
   (ert-deftest ob-test-extract-from-empty ()
     "Try extracting a post from an empty buffer."
     (with-temp-buffer
-      (should (equal (org-blog-buffer-extract-post) '((:blog)
-                                                      (:category)
-                                                      (:content . "\n")
-                                                      (:date)
-                                                      (:excerpt)
-                                                      (:id)
-                                                      (:link)
-                                                      (:name)
-                                                      (:parent)
-                                                      (:status)
-                                                      (:tags)
-                                                      (:title)
-                                                      (:type))))))
+      (let ((post-string "")
+            (post-struct '((:blog)
+                           (:category)
+                           (:content . "\n")
+                           (:date)
+                           (:excerpt)
+                           (:id)
+                           (:link)
+                           (:name)
+                           (:parent)
+                           (:status)
+                           (:tags)
+                           (:title)
+                           (:type))))
+        (should (equal (org-blog-buffer-extract-post) post-struct)))))
 
   (ert-deftest ob-test-extract-from-buffer ()
     "Try extracting a post from a buffer with stuff set."
     (with-temp-buffer
-      (insert "\
+      (let ((post-string "\
 #+POST_BLOG: t1b
 #+POST_CATEGORY: t1c1, t1c2
 #+DATE: [2013-01-25 Fri 00:00]
@@ -117,16 +177,107 @@ retain the maximum flexibility for further transformation."
 #+POST_TYPE: post
 
 Just a little bit of content.")
-      (should (equal (org-blog-buffer-extract-post) '((:blog . "t1b")
-                                                      (:category "t1c1" "t1c2")
-                                                      (:content . "\n<p>Just a little bit of content.\n</p>")
-                                                      (:date (20738 4432))
-                                                      (:excerpt . "t1e")
-                                                      (:id . "1")
-                                                      (:link . "http://example.com/")
-                                                      (:name . "t1n")
-                                                      (:parent)
-                                                      (:status)
-                                                      (:tags "t1k1" "t1k2" "t1k3")
-                                                      (:title . "Test 1 Title")
-                                                      (:type . "post")))))))
+            (post-struct '((:blog . "t1b")
+                           (:category "t1c1" "t1c2")
+                           (:content . "\n<p>Just a little bit of content.\n</p>")
+                           (:date (20738 4432))
+                           (:excerpt . "t1e")
+                           (:id . "1")
+                           (:link . "http://example.com/")
+                           (:name . "t1n")
+                           (:parent)
+                           (:status)
+                           (:tags "t1k1" "t1k2" "t1k3")
+                           (:title . "Test 1 Title")
+                           (:type . "post"))))
+      (insert post-string)
+      (should (equal (org-blog-buffer-extract-post) post-struct)))))
+
+  (ert-deftest ob-test-merge-from-empty ()
+    "Try merging an empty post into an empty buffer."
+    (with-temp-buffer
+      (let ((post-string "")
+            (post-struct '((:blog)
+                           (:category)
+                           (:content . "\n")
+                           (:date)
+                           (:excerpt)
+                           (:id)
+                           (:link)
+                           (:name)
+                           (:parent)
+                           (:status)
+                           (:tags)
+                           (:title)
+                           (:type))))
+        (org-blog-buffer-merge-post post-struct)
+        (should (equal (buffer-string) post-string)))))
+
+  (ert-deftest ob-test-merge-from-full ()
+    "Try merging a full post into an empty buffer."
+    (with-temp-buffer
+      (let ((post-string "\
+#+POST_BLOG: t1b
+#+POST_CATEGORY: t1c1, t1c2
+#+DATE: [2013-01-25 Fri 00:00]
+#+DESCRIPTION: t1e
+#+POST_ID: 1
+#+POST_LINK: http://example.com/
+#+POST_NAME: t1n
+#+POST_PARENT: 0
+#+POST_STATUS: publish
+#+KEYWORDS: t1k1, t1k2, t1k3
+#+TITLE: Test 1 Title
+#+POST_TYPE: post
+")
+            (post-struct '((:blog . "t1b")
+                           (:category "t1c1" "t1c2")
+                           (:content . "\n")
+                           (:date (20738 4432))
+                           (:excerpt . "t1e")
+                           (:id . "1")
+                           (:link . "http://example.com/")
+                           (:name . "t1n")
+                           (:parent . "0")
+                           (:status . "publish")
+                           (:tags "t1k1" "t1k2" "t1k3")
+                           (:title . "Test 1 Title")
+                           (:type . "post"))))
+        (org-blog-buffer-merge-post post-struct)
+        (should (equal (buffer-string) post-string)))))
+
+  (ert-deftest ob-test-merge-round-trip ()
+    "Try merging a full post into a full buffer, and make sure
+you get the same thing out."
+    (with-temp-buffer
+      (let ((post-string "#+POST_BLOG: t2b
+#+POST_CATEGORY: t2c1, t2c2
+#+DATE: [2013-01-25 Fri 00:00]
+#+DESCRIPTION: t2e
+#+POST_ID: 1
+#+POST_LINK: http://example.com/
+#+POST_NAME: t2n
+#+POST_PARENT: 0
+#+POST_STATUS: publish
+#+KEYWORDS: t2k1, t2k2, t2k3
+#+TITLE: Test 2 Title
+#+POST_TYPE: post
+")
+            (post-struct '((:blog . "t2b")
+                           (:category "t2c1" "t2c2")
+                           (:content . "\n")
+                           (:date (20738 4432))
+                           (:excerpt . "t2e")
+                           (:id . "1")
+                           (:link . "http://example.com/")
+                           (:name . "t2n")
+                           (:parent . "0")
+                           (:status . "publish")
+                           (:tags "t2k1" "t2k2" "t2k3")
+                           (:title . "Test 2 Title")
+                           (:type . "post"))))
+        (org-blog-buffer-merge-post post-struct)
+        (should (equal (buffer-string) post-string))
+        (should (equal (org-blog-buffer-extract-post) post-struct))
+        (org-blog-buffer-merge-post post-struct)
+        (should (equal (buffer-string) post-string))))))
