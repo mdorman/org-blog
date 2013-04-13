@@ -140,8 +140,7 @@ glomming them onto the existing post."
     (when category
       (push (cons :category (cdr category)) post))
     (when tag
-      (push (cons :tags (cdr tag)) post)))
-  post)
+      (push (cons :tags (cdr tag)) post))))
 
 (defun org-blog-wp-xml-terms-to-term-alist (terms)
   "Handle turning WordPress taxonomy lists into an alist.
