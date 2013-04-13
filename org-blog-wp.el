@@ -77,8 +77,7 @@ sorted."
                ((eq :title k)
                 (cons (cons "post_title" (or v "No Title")) wp))
                ((assq k org-blog-wp-alist)
-                (cons (cons (cdr (assq k org-blog-wp-alist)) v) wp))
-               )))
+                (cons (cons (cdr (assq k org-blog-wp-alist)) v) wp)))))
     post :initial-value nil)
    '(lambda (a b)
       (string< (car a) (car b)))))
@@ -151,8 +150,7 @@ From here we can extract just the bits we need."
       (let ((name (cdr (assoc "name" term)))
             (taxonomy (cdr (assoc "taxonomy" term))))
         (cons (append (list taxonomy) (cdr (assoc taxonomy lists)) (list name)) lists)))
-   terms
-   :initial-value nil))
+   terms :initial-value nil))
 
 ;;;; Define tests if ert is loaded
 (when (featurep 'ert)
