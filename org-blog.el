@@ -22,8 +22,6 @@
 
 (provide 'org-blog)
 
-(require 'org-blog-buffer)
-
 (define-minor-mode org-blog-mode
   "Toggle org-blog mode.
 
@@ -48,6 +46,7 @@ them.")
 
 Each loaded back-end should add its name to the list.")
 
+(require 'org-blog-buffer)
 (require 'org-blog-wp)
 
 (defun org-blog-new ()
