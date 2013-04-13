@@ -66,10 +66,11 @@ sorted."
                 (org-blog-post-to-wp-add-taxonomy wp "category" v))
                ((eq :date k)
                 ;; Convert to GMT by adding seconds offset
-                (cons (cons "post_date_gmt" (list :datetime
-                                                  (time-add (car v)
-                                                            (seconds-to-time (- (car (current-time-zone)))))))
-                      wp))
+                (cons
+                 (cons "post_date_gmt" (list :datetime
+                                             (time-add v
+                                                       (seconds-to-time (- (car (current-time-zone)))))))
+                 wp))
                ((eq :tags k)
                 (org-blog-post-to-wp-add-taxonomy wp "post_tag" v))
                ((eq :title k)
@@ -118,7 +119,7 @@ sorted."
                 (org-blog-wp-to-post-handle-taxonomy post v))
                ((string= "post_date_gmt" k)
                 ;; Must be a better way to extract this value
-                (cons (cons (car (rassoc k org-blog-wp-alist)) (list (time-add (cadr v) (seconds-to-time (car (current-time-zone)))))) post))
+                (cons (cons (car (rassoc k org-blog-wp-alist)) (time-add (cadr v) (seconds-to-time (car (current-time-zone))))) post))
                ((rassoc k org-blog-wp-alist)
                 (cons (cons (car (rassoc k org-blog-wp-alist)) v) post))
                (t
@@ -159,7 +160,7 @@ From here we can extract just the bits we need."
     (let ((post1-struct '((:blog . "t1b")
 			  (:category "t1c1" "t1c2")
 			  (:content . "\n<p>Test 1 Content\n</p>")
-			  (:date (20738 4432 0 0))
+			  (:date 20738 4432 0 0)
 			  (:excerpt . "t1e")
 			  (:id . "1")
 			  (:link . "http://example.com/")
@@ -188,7 +189,7 @@ From here we can extract just the bits we need."
     (let ((post1-struct '((:blog . "t1b")
 			  (:category "t1c1" "t1c2")
 			  (:content . "\n<p>Test 1 Content\n</p>")
-			  (:date (20738 4432 0 0))
+			  (:date 20738 4432 0 0)
 			  (:excerpt . "t1e")
 			  (:id . "1")
 			  (:link . "http://example.com/")

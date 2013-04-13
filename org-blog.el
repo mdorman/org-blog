@@ -70,7 +70,7 @@ empty fields that the user may wish to fill in."
     ;; FIXME: Get defaults from org-blog-alist entry for the blog
     (org-blog-buffer-merge-post `((:blog . ,name)
                                   (:category . "")
-                                  (:date ,(current-time))
+                                  (:date . ,(current-time))
                                   (:excerpt . "")
                                   (:format . "post")
                                   (:status . "publish")
