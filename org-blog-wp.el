@@ -90,12 +90,10 @@ convenience in testing and inspection."
          (existing (cdr terms))
          (struct (cons taxonomy entries)))
     (if existing
-        (progn
-          (push struct existing)
-          (setcdr terms (sort
-                         existing
-                         '(lambda (a b)
-                            (string< (car a) (car b))))))
+        (setcdr terms (sort
+                       (cons struct existing)
+                       '(lambda (a b)
+                          (string< (car a) (car b)))))
       (push (list "terms_names" struct) wp))
     wp))
 
