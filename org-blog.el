@@ -43,6 +43,13 @@ Commands:
 There are a number of parameters.  Some day I will enumerate
 them.")
 
+(defvar org-blog-engine-alist nil
+  "A list of back-ends we support.
+
+Each loaded back-end should add its name to the list.")
+
+(require 'org-blog-wp)
+
 (defun org-blog-new ()
   "Create a new buffer primed for a blog entry.
 
