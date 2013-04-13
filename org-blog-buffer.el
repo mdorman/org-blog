@@ -140,7 +140,7 @@ update the buffer to reflect the values it contains."
           '(lambda (a b)
              (string< (car b) (car a)))))))))
 
-;;;; Run tests if ert is loaded
+;;;; Declare tests if ert is loaded
 (when (featurep 'ert)
   (ert-deftest ob-test-extract-from-empty ()
     "Try extracting a post from an empty buffer."

@@ -177,5 +177,4 @@ we default to unknown."
 #+POST_TYPE: post
 "))
        (org-blog-new)
-       (should (string= (org-no-properties (buffer-string)) post-string)))))
-)
+       (should (string= (org-no-properties (buffer-string)) post-string))))))
