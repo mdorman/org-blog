@@ -99,10 +99,63 @@ convenience in testing and inspection."
       (push (list "terms_names" struct) wp))
     wp))
 
+(defun org-blog-wp-to-post (wp)
+  "Transform a WordPress struct into a post.
+
+This is largely about mapping tag names, though the `terms'
+structure benefits from a helper function to handle mapping it
+properly.
+
+For convenience in testing and inspection, the resulting alist is
+sorted."
+  (sort
+   (reduce
+    '(lambda (post new)
+       "Do key and value transformations."
+       (let ((k (car new))
+             (v (cdr new)))
+         (when v
+           (cond ((string= "terms" k)
+                  (setq post (org-blog-wp-to-post-handle-taxonomy post v)))
+                 ((string= "post_date_gmt" k)
+                  ;; Must be a better way to extract this value
+                  (push (cons (car (rassoc k org-blog-wp-alist)) (list (time-add (cadr v) (seconds-to-time (car (current-time-zone)))))) post))
+                 ((rassoc k org-blog-wp-alist)
+                  (push (cons (car (rassoc k org-blog-wp-alist)) v) post)))))
+       post)
+    wp :initial-value nil)
+   '(lambda (a b)
+      (string< (car a) (car b)))))
+
+(defun org-blog-wp-to-post-handle-taxonomy (post entries)
+  "Handle mapping WordPress taxonomy info into a post struct.
+
+We have to operate on all of the items in the taxonomy structure,
+glomming them onto the existing post."
+  (let* ((tlist (org-blog-wp-xml-terms-to-term-alist entries))
+         (category (assoc "category" tlist))
+         (tag (assoc "post_tag" tlist)))
+    (when category
+      (push (cons :category (cdr category)) post))
+    (when tag
+      (push (cons :tags (cdr tag)) post)))
+  post)
+
+(defun org-blog-wp-xml-terms-to-term-alist (terms)
+  "Handle turning WordPress taxonomy lists into an alist.
+
+From here we can extract just the bits we need."
+  (reduce
+   '(lambda (lists term)
+      (let ((name (cdr (assoc "name" term)))
+            (taxonomy (cdr (assoc "taxonomy" term))))
+        (cons (append (list taxonomy) (cdr (assoc taxonomy lists)) (list name)) lists)))
+   terms
+   :initial-value nil))
 
 ;;;; Define tests if ert is loaded
 (when (featurep 'ert)
-  (ert-deftest ob-test-posts-and-wp ()
+  (ert-deftest ob-test-post-to-wp ()
     "Transfer from buffers to posts and back again"
     (let ((post1-struct '((:blog . "t1b")
 			  (:category "t1c1" "t1c2")
@@ -130,4 +183,95 @@ convenience in testing and inspection."
 			    ("terms_names"
 			     ("category" "t1c1" "t1c2")
 			     ("post_tag" "t1k1" "t1k2" "t1k3")))))
-        (should (equal (org-blog-post-to-wp post1-struct) post1-wp-input)))))
+        (should (equal (org-blog-post-to-wp post1-struct) post1-wp-input))))
+  (ert-deftest ob-test-wp-to-post ()
+    "Transform from a WP response to a post"
+    (let ((post1-struct '((:blog . "t1b")
+			  (:category "t1c1" "t1c2")
+			  (:content . "\n<p>Test 1 Content\n</p>")
+			  (:date (20738 4432 0 0))
+			  (:excerpt . "t1e")
+			  (:id . "1")
+			  (:link . "http://example.com/")
+			  (:name . "t1n")
+			  (:parent . "0")
+			  (:status . "publish")
+			  (:tags "t1k1" "t1k2" "t1k3")
+			  (:title . "Test 1 Title")
+			  (:type . "post")))
+	  (post1-wp-output '(("post_id" . "1")
+			     ("post_title" . "Test 1 Title")
+			     ("post_date" :datetime
+			      (20738 4432))
+			     ("post_date_gmt" :datetime
+			      (20738 18832 0 0))
+			     ("post_modified" :datetime
+			      (20738 4432))
+			     ("post_modified_gmt" :datetime
+			      (20738 4432))
+			     ("post_status" . "publish")
+			     ("post_type" . "post")
+			     ("post_name" . "t1n")
+			     ("post_author" . "3075621")
+			     ("post_password")
+			     ("post_excerpt" . "t1e")
+			     ("post_content" . "\n<p>Test 1 Content\n</p>")
+			     ("post_parent" . "0")
+			     ("post_mime_type")
+			     ("link" . "http://example.com/")
+			     ("guid" . "http://example.com/")
+			     ("menu_order" . 0)
+			     ("comment_status" . "closed")
+			     ("ping_status" . "open")
+			     ("sticky")
+			     ("post_thumbnail")
+			     ("post_format" . "standard")
+			     ("terms"
+			      (("term_id" . "126039325")
+			       ("name" . "t1c1")
+			       ("slug" . "t1c1")
+			       ("term_group" . "0")
+			       ("term_taxonomy_id" . "4")
+			       ("taxonomy" . "category")
+			       ("description")
+			       ("parent" . "0")
+			       ("count" . 0))
+			      (("term_id" . "126039469")
+			       ("name" . "t1c2")
+			       ("slug" . "t1c2")
+			       ("term_group" . "0")
+			       ("term_taxonomy_id" . "5")
+			       ("taxonomy" . "category")
+			       ("description")
+			       ("parent" . "0")
+			       ("count" . 0))
+			      (("term_id" . "147991082")
+			       ("name" . "t1k1")
+			       ("slug" . "t1k1")
+			       ("term_group" . "0")
+			       ("term_taxonomy_id" . "6")
+			       ("taxonomy" . "post_tag")
+			       ("description")
+			       ("parent" . "0")
+			       ("count" . 0))
+			      (("term_id" . "147991085")
+			       ("name" . "t1k2")
+			       ("slug" . "t1k2")
+			       ("term_group" . "0")
+			       ("term_taxonomy_id" . "7")
+			       ("taxonomy" . "post_tag")
+			       ("description")
+			       ("parent" . "0")
+			       ("count" . 0))
+			      (("term_id" . "147991087")
+			       ("name" . "t1k3")
+			       ("slug" . "t1k3")
+			       ("term_group" . "0")
+			       ("term_taxonomy_id" . "8")
+			       ("taxonomy" . "post_tag")
+			       ("description")
+			       ("parent" . "0")
+			       ("count" . 0)))
+			     ("custom_fields"))))
+      ;; FIXME: we should actually be looking up :blog in the alist
+      (should (equal (cons (cons :blog "t1b") (org-blog-wp-to-post post1-wp-output)) post1-struct)))))
