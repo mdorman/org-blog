@@ -114,15 +114,17 @@ sorted."
        "Do key and value transformations."
        (let ((k (car new))
              (v (cdr new)))
-         (when v
-           (cond ((string= "terms" k)
-                  (setq post (org-blog-wp-to-post-handle-taxonomy post v)))
-                 ((string= "post_date_gmt" k)
-                  ;; Must be a better way to extract this value
-                  (push (cons (car (rassoc k org-blog-wp-alist)) (list (time-add (cadr v) (seconds-to-time (car (current-time-zone)))))) post))
-                 ((rassoc k org-blog-wp-alist)
-                  (push (cons (car (rassoc k org-blog-wp-alist)) v) post)))))
-       post)
+         (cond ((eq v nil)
+                post)
+               ((string= "terms" k)
+                (org-blog-wp-to-post-handle-taxonomy post v))
+               ((string= "post_date_gmt" k)
+                ;; Must be a better way to extract this value
+                (push (cons (car (rassoc k org-blog-wp-alist)) (list (time-add (cadr v) (seconds-to-time (car (current-time-zone)))))) post))
+               ((rassoc k org-blog-wp-alist)
+                (push (cons (car (rassoc k org-blog-wp-alist)) v) post))
+               (t
+                 post))))
     wp :initial-value nil)
    '(lambda (a b)
       (string< (car a) (car b)))))
