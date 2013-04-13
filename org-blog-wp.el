@@ -65,7 +65,7 @@ sorted."
                ((eq :category k)
                 (org-blog-post-to-wp-add-taxonomy wp "category" v))
                ((eq :date k)
-                ;; Converty to GMT by adding seconds offset
+                ;; Convert to GMT by adding seconds offset
                 (cons (cons "post_date_gmt" (list :datetime
                                                   (time-add (car v)
                                                             (seconds-to-time (- (car (current-time-zone)))))))
