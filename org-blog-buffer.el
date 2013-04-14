@@ -68,7 +68,7 @@ retain the maximum flexibility for further transformation."
                                                    (wrong-number-of-arguments
                                                     (org-export-as-html nil nil 'string t nil))))))
          #'(lambda (a b)
-	     (string< (car a) (car b))))))))
+             (string< (car a) (car b))))))))
 
 (defun property-trim (k)
   "Get a property value trimmed of leading spaces."
@@ -138,7 +138,7 @@ update the buffer to reflect the values it contains."
          (sort
           (copy-alist merge)
           #'(lambda (a b)
-	      (string< (car b) (car a)))))))))
+              (string< (car b) (car a)))))))))
 
 ;;;; Declare tests if ert is loaded
 (when (featurep 'ert)
@@ -190,8 +190,8 @@ Just a little bit of content.")
                            (:tags "t1k1" "t1k2" "t1k3")
                            (:title . "Test 1 Title")
                            (:type . "post"))))
-      (insert post-string)
-      (should (equal (org-blog-buffer-extract-post) post-struct)))))
+        (insert post-string)
+        (should (equal (org-blog-buffer-extract-post) post-struct)))))
 
   (ert-deftest ob-test-merge-from-empty ()
     "Try merging an empty post into an empty buffer."
