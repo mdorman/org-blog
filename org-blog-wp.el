@@ -58,7 +58,7 @@ For convenience in testing and inspection, the resulting alist is
 sorted."
   (sort
    (reduce
-    '(lambda (wp new)
+    #'(lambda (wp new)
        (let ((k (car new))
              (v (cdr new)))
          (cond ((eq v nil)
@@ -79,8 +79,8 @@ sorted."
                ((assq k org-blog-wp-alist)
                 (cons (cons (cdr (assq k org-blog-wp-alist)) v) wp)))))
     post :initial-value nil)
-   '(lambda (a b)
-      (string< (car a) (car b)))))
+   #'(lambda (a b)
+       (string< (car a) (car b)))))
 
 (defun org-blog-post-to-wp-add-taxonomy (wp taxonomy entries)
   "Handle adding taxonomy items to a WordPress struct.
@@ -93,8 +93,8 @@ convenience in testing and inspection."
     (if existing
         (setcdr terms (sort
                        (cons struct existing)
-                       '(lambda (a b)
-                          (string< (car a) (car b)))))
+                       #'(lambda (a b)
+			   (string< (car a) (car b)))))
       (push (list "terms_names" struct) wp))
     wp))
 
@@ -109,7 +109,7 @@ For convenience in testing and inspection, the resulting alist is
 sorted."
   (sort
    (reduce
-    '(lambda (post new)
+    #'(lambda (post new)
        "Do key and value transformations."
        (let ((k (car new))
              (v (cdr new)))
@@ -125,8 +125,8 @@ sorted."
                (t
                  post))))
     wp :initial-value nil)
-   '(lambda (a b)
-      (string< (car a) (car b)))))
+   #'(lambda (a b)
+       (string< (car a) (car b)))))
 
 (defun org-blog-wp-to-post-handle-taxonomy (post entries)
   "Handle mapping WordPress taxonomy info into a post struct.
@@ -146,10 +146,10 @@ glomming them onto the existing post."
 
 From here we can extract just the bits we need."
   (reduce
-   '(lambda (lists term)
-      (let ((name (cdr (assoc "name" term)))
-            (taxonomy (cdr (assoc "taxonomy" term))))
-        (cons (append (list taxonomy) (cdr (assoc taxonomy lists)) (list name)) lists)))
+   #'(lambda (lists term)
+       (let ((name (cdr (assoc "name" term)))
+	     (taxonomy (cdr (assoc "taxonomy" term))))
+	 (cons (append (list taxonomy) (cdr (assoc taxonomy lists)) (list name)) lists)))
    terms :initial-value nil))
 
 ;;;; Define tests if ert is loaded

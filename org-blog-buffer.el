@@ -67,8 +67,8 @@ retain the maximum flexibility for further transformation."
                                                      (org-export-as-html nil nil nil 'string t nil)
                                                    (wrong-number-of-arguments
                                                     (org-export-as-html nil nil 'string t nil))))))
-         '(lambda (a b)
-            (string< (car a) (car b))))))))
+         #'(lambda (a b)
+	     (string< (car a) (car b))))))))
 
 (defun property-trim (k)
   "Get a property value trimmed of leading spaces."
@@ -105,7 +105,7 @@ update the buffer to reflect the values it contains."
       ;; Get the current values
       (let ((current (org-blog-buffer-extract-post)))
         (mapc
-         (lambda (item)
+         #'(lambda (item)
            (let ((k (car item))
                  (v (cdr item))
                  val existing)
@@ -137,8 +137,8 @@ update the buffer to reflect the values it contains."
          ;; Reverse sort fields to insert alphabetically
          (sort
           (copy-alist merge)
-          '(lambda (a b)
-             (string< (car b) (car a)))))))))
+          #'(lambda (a b)
+	      (string< (car b) (car a)))))))))
 
 ;;;; Declare tests if ert is loaded
 (when (featurep 'ert)
