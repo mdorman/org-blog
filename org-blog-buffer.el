@@ -53,7 +53,7 @@ retain the maximum flexibility for further transformation."
                (cons :category (property-split :category))
                (cons :date (let ((timestamp (property-trim :date)))
                              (when timestamp
-                               (list (date-to-time timestamp)))))
+                               (date-to-time timestamp))))
                (cons :excerpt (property-trim :description))
                (cons :id (property-trim :id))
                (cons :link (property-trim :link))
@@ -67,8 +67,8 @@ retain the maximum flexibility for further transformation."
                                                      (org-export-as-html nil nil nil 'string t nil)
                                                    (wrong-number-of-arguments
                                                     (org-export-as-html nil nil 'string t nil))))))
-         '(lambda (a b)
-            (string< (car a) (car b))))))))
+         #'(lambda (a b)
+             (string< (car a) (car b))))))))
 
 (defun property-trim (k)
   "Get a property value trimmed of leading spaces."
@@ -105,7 +105,7 @@ update the buffer to reflect the values it contains."
       ;; Get the current values
       (let ((current (org-blog-buffer-extract-post)))
         (mapc
-         (lambda (item)
+         #'(lambda (item)
            (let ((k (car item))
                  (v (cdr item))
                  val existing)
@@ -114,7 +114,7 @@ update the buffer to reflect the values it contains."
                                 (print "setting val to nil")
                                 nil)
                                ((eq k :date)
-                                (format-time-string "[%Y-%m-%d %a %H:%M]" (car v)))
+                                (format-time-string "[%Y-%m-%d %a %H:%M]" v))
                                ((listp v)
                                 (mapconcat 'identity v ", "))
                                ((stringp v) 
@@ -137,8 +137,8 @@ update the buffer to reflect the values it contains."
          ;; Reverse sort fields to insert alphabetically
          (sort
           (copy-alist merge)
-          '(lambda (a b)
-             (string< (car b) (car a)))))))))
+          #'(lambda (a b)
+              (string< (car b) (car a)))))))))
 
 ;;;; Declare tests if ert is loaded
 (when (featurep 'ert)
@@ -180,7 +180,7 @@ Just a little bit of content.")
             (post-struct '((:blog . "t1b")
                            (:category "t1c1" "t1c2")
                            (:content . "\n<p>Just a little bit of content.\n</p>")
-                           (:date (20738 4432))
+                           (:date 20738 4432)
                            (:excerpt . "t1e")
                            (:id . "1")
                            (:link . "http://example.com/")
@@ -190,8 +190,8 @@ Just a little bit of content.")
                            (:tags "t1k1" "t1k2" "t1k3")
                            (:title . "Test 1 Title")
                            (:type . "post"))))
-      (insert post-string)
-      (should (equal (org-blog-buffer-extract-post) post-struct)))))
+        (insert post-string)
+        (should (equal (org-blog-buffer-extract-post) post-struct)))))
 
   (ert-deftest ob-test-merge-from-empty ()
     "Try merging an empty post into an empty buffer."
@@ -233,7 +233,7 @@ Just a little bit of content.")
             (post-struct '((:blog . "t1b")
                            (:category "t1c1" "t1c2")
                            (:content . "\n")
-                           (:date (20738 4432))
+                           (:date 20738 4432)
                            (:excerpt . "t1e")
                            (:id . "1")
                            (:link . "http://example.com/")
@@ -266,7 +266,7 @@ you get the same thing out."
             (post-struct '((:blog . "t2b")
                            (:category "t2c1" "t2c2")
                            (:content . "\n")
-                           (:date (20738 4432))
+                           (:date 20738 4432)
                            (:excerpt . "t2e")
                            (:id . "1")
                            (:link . "http://example.com/")
