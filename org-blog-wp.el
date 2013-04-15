@@ -22,9 +22,10 @@
 
 (provide 'org-blog-wp)
 
-(add-to-list 'org-blog-engine-alist '("wp"))
-
+(require 'org-blog)
 (require 'xml-rpc)
+
+(add-to-list 'org-blog-engine-alist '("wp"))
 
 (eval-when-compile
   (require 'cl))
