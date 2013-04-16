@@ -24,6 +24,23 @@
 
 (require 'org)
 (require 'org-exp)
+(require 'org-blog)
+
+(eval-when-compile
+  (require 'cl))
+
+(defconst org-blog-buffer-fields (sort
+                                  (reduce
+                                   #'(lambda (l i)
+                                       (let ((field (plist-get (cdr i) :org)))
+                                         (if (and (< 5 (length field))
+                                                  (string= (substring field 0 5) "POST_"))
+                                             (cons (list field (car i)) l)
+                                           l)))
+                                   org-blog-post-mapping
+                                   :initial-value nil)
+                                  #'(lambda (a b)
+                                      (string< (car b) (car a)))))
 
 (defun org-blog-buffer-extract-post ()
   "Transform a buffer into a post.
@@ -32,14 +49,7 @@ We do as little processing as possible on individual items, to
 retain the maximum flexibility for further transformation."
   (save-excursion
     (save-restriction
-      (let ((org-export-inbuffer-options-extra '(("POST_BLOG" :blog)
-                                                 ("POST_CATEGORY" :category)
-                                                 ("POST_ID" :id)
-                                                 ("POST_LINK" :link)
-                                                 ("POST_NAME" :name)
-                                                 ("POST_PARENT" :parent)
-                                                 ("POST_STATUS" :status)
-                                                 ("POST_TYPE" :type)))
+      (let ((org-export-inbuffer-options-extra org-blog-buffer-fields)
             (org-export-date-timestamp-format "%Y%m%dT%T%z")
             (org-export-with-preserve-breaks nil)
             (org-export-with-priority nil)
@@ -82,19 +92,6 @@ retain the maximum flexibility for further transformation."
     (when v
       (split-string v "\\( *, *\\)" t))))
 
-(defconst mapping (list (cons :blog "POST_BLOG")
-                        (cons :category "POST_CATEGORY")
-                        (cons :date "DATE")
-                        (cons :excerpt "DESCRIPTION")
-                        (cons :id "POST_ID")
-                        (cons :link "POST_LINK")
-                        (cons :name "POST_NAME")
-                        (cons :parent "POST_PARENT")
-                        (cons :status "POST_STATUS")
-                        (cons :tags "KEYWORDS")
-                        (cons :title "TITLE")
-                        (cons :type "POST_TYPE")))
-
 (defun org-blog-buffer-merge-post (merge)
   "Merge a post into a buffer.
 
@@ -109,7 +106,7 @@ update the buffer to reflect the values it contains."
            (let ((k (car item))
                  (v (cdr item))
                  val existing)
-             (when (cdr (assq k mapping))
+             (when (cdr (assq k org-blog-post-mapping))
                (setq val (cond ((eq v nil)
                                 (print "setting val to nil")
                                 nil)
@@ -127,13 +124,13 @@ update the buffer to reflect the values it contains."
                 ;; Inserting a new keyword
                 ((eq (cdr (assq k current)) nil)
                  (when val
-                   (insert (concat "#+" (cdr (assq k mapping)) ": " val "\n"))))
+                   (insert (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :org) ": " val "\n"))))
                 ;; Updating an existing keyword
                 ((not (equal (cdr (assq k current)) val))
-                 (let ((re (org-make-options-regexp (list (cdr (assq k mapping))) nil))
+                 (let ((re (org-make-options-regexp (list (plist-get (cdr (assq k org-blog-post-mapping)) :org)) nil))
                        (case-fold-search t))
                    (re-search-forward re nil t)
-                   (replace-match (concat "#+" (cdr (assq k mapping)) ": " val) t t)))))))
+                   (replace-match (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :org) ": " val) t t)))))))
          ;; Reverse sort fields to insert alphabetically
          (sort
           (copy-alist merge)
