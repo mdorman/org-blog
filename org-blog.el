@@ -46,6 +46,19 @@ them.")
 
 Each loaded back-end should add its name to the list.")
 
+(defconst org-blog-post-mapping '((:blog :org "POST_BLOG")
+                                  (:category :org "POST_CATEGORY")
+                                  (:date :org "DATE")
+                                  (:excerpt :org "DESCRIPTION")
+                                  (:id :org "POST_ID")
+                                  (:link :org "POST_LINK")
+                                  (:name :org "POST_NAME")
+                                  (:parent :org "POST_PARENT")
+                                  (:status :org "POST_STATUS")
+                                  (:tags :org "KEYWORDS")
+                                  (:title :org "TITLE")
+                                  (:type :org "POST_TYPE")))
+
 (require 'org-blog-buffer)
 (require 'org-blog-wp)
 

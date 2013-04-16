@@ -152,6 +152,64 @@ From here we can extract just the bits we need."
          (cons (append (list taxonomy) (cdr (assoc taxonomy lists)) (list name)) lists)))
    terms :initial-value nil))
 
+(defun org-blog-wp-params (blog)
+  "Construct the basic paramlist for wordpress calls.
+
+This starts with the information the user may have set for the
+blog in their configuration, and then attempts to fill in any
+holes so it can produce a list of necessearily generic
+parameters.  `org-blog-wp-call' can then use the output of this
+function to make other calls."
+  (let ((complete (list (cons :engine "wp"))))
+    (push (cons :xmlrpc (or (cdr (assq :xmlrpc blog))
+                            (empty-string-is-nil (read-from-minibuffer "XML-RPC URL: "))
+                            (error "Posting cancelled")))
+          complete)
+
+    (push (cons :username (or (cdr (assq :username blog))
+                              (empty-string-is-nil (read-from-minibuffer "Username: "))
+                              (error "Posting cancelled")))
+          complete)
+    (push (cons :password (or (cdr (assq :password blog))
+                              (empty-string-is-nil (read-passwd "Password: "))
+                              (error "Posting cancelled")))
+          complete)
+    (push (cons :blog-id (or (cdr (assq :blog-id blog))
+                             (empty-string-is-nil (let ((userblogs (xml-rpc-method-call
+                                                                    (cdr (assq :xmlrpc complete))
+                                                                    'wp.getUsersBlogs
+                                                                    (cdr (assq :username complete))
+                                                                    (cdr (assq :password complete)))))
+                                                    (cond
+                                                     ;; If there's no blogs, fail
+                                                     ((eq userblogs nil)
+                                                      nil)
+                                                     ;; If there's only one blog, use its blog-id (and xml-rpc) automatically
+                                                     ((equal (length userblogs) 1)
+                                                      (setcdr (assq :xmlrpc complete) (cdr (assoc "xmlrpc" (car userblogs))))
+                                                      (cdr (assoc "blogid" (car userblogs))))
+                                                     ;; FIXME: Prompt the user from the list of blogs (if there's more than 1
+                                                     ;; Then shove the blog info into complete
+                                                     (t
+                                                      (reduce
+                                                       #'(lambda (entry)
+                                                           (when (string= (cdr (assoc "blogName" entry)))
+                                                             (print (format "XMLRPC from server is %s" (cdr (assoc "xmlrpc" userblog))))
+                                                             (setcdr (assq :xmlrpc complete) (cdr (assoc "xmlrpc" userblog)))
+                                                             (cdr (assoc "blogid" userblog))))
+                                                       userblogs
+                                                       :initial-value (completing-read
+                                                                       "Blog Name: "
+                                                                       (mapcar #'(lambda (entry)
+                                                                                   (cdr (assoc "blogName" entry)))
+                                                                               userblogs) nil t))))))
+                             (error "Posting cancelled")))
+          complete)
+    (sort
+     complete
+     #'(lambda (a b)
+         (string< (car a) (car b))))))
+
 ;;;; Define tests if ert is loaded
 (when (featurep 'ert)
   (ert-deftest ob-test-post-to-wp ()
@@ -273,4 +331,17 @@ From here we can extract just the bits we need."
                                ("count" . 0)))
                              ("custom_fields"))))
       ;; FIXME: we should actually be looking up :blog in the alist
-      (should (equal (cons (cons :blog "t1b") (org-blog-wp-to-post post1-wp-output)) post1-struct)))))
+      (should (equal (cons (cons :blog "t1b") (org-blog-wp-to-post post1-wp-output)) post1-struct))))
+
+  (ert-deftest ob-test-wp-params ()
+    "Test getting the blog-id (and correct xmlrpc URL) via xmlrpc"
+    (let* ((blog-passwd (read-passwd "Password for blog listing: "))
+           (initial-blog-param `((:xmlrpc . "http://wordpress.com/xmlrpc.php")
+                                 (:username . "mdorman@ironicdesign.com")
+                                 (:password . ,blog-passwd)))
+           (final-blog-param `((:blog-id . "46183217")
+                               (:engine . "wp")
+                               (:password . ,blog-passwd)
+                               (:username . "mdorman@ironicdesign.com")
+                               (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
+      (should (equal (org-blog-wp-params initial-blog-param) final-blog-param)))))
