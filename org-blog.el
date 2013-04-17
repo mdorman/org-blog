@@ -112,6 +112,34 @@ we default to unknown."
   (unless (= 0 (length string))
     string))
 
+(defun org-blog-post-to-blog (post)
+  "Determine the blog to use for the given post.
+
+It will ask for the blog name and blog engine if necessary, and
+then hand off to the particular engine's `-params' function, so
+it may make a number of interactive queries to the user."
+  (let* ((name (org-blog-get-name post))
+         (blog (cdr (assoc name org-blog-alist)))
+         (engine (org-blog-blog-to-engine blog))
+         (funcname (concat "org-blog-" engine "-params"))
+         (func (intern funcname)))
+    (unless (functionp func)
+      (error (format "Can't find params function for %s engine" engine)))
+    (apply func blog nil)))
+
+(defun org-blog-blog-to-engine (blog)
+  "Get the blog engine name from the blog structure.
+
+If it's not present, ask the user to choose from among those
+available in org-blog-alist."
+  (let ((engine (or (cdr (assq :engine blog))
+                    (empty-string-is-nil (completing-read
+                                          "Blog software: "
+                                          (mapcar 'car org-blog-engine-alist) nil t)))))
+    (unless engine
+      (error (format "Can't find engine %s" engine)))
+    engine))
+
 ;;;; Define tests if ert is loaded
 (when (featurep 'ert)
   (require 'el-mock)
@@ -189,4 +217,19 @@ we default to unknown."
 #+POST_TYPE: post
 "))
        (org-blog-new)
-       (should (string= (org-no-properties (buffer-string)) post-string))))))
+       (should (string= (org-no-properties (buffer-string)) post-string)))))
+
+  (ert-deftest ob-test-org-blog-post-to-blog ()
+    "Test getting the blog information from a blog post"
+    (let* ((blog-passwd (read-passwd "Password for blog listing: "))
+           (org-blog-alist `(("bar" . ((:engine . "wp")
+                                       (:xmlrpc . "http://wordpress.com/xmlrpc.php")
+                                       (:username . "mdorman@ironicdesign.com")
+                                       (:password . ,blog-passwd)))))
+           (final-blog-param `((:blog-id . "46183217")
+                               (:engine . "wp")
+                               (:password . ,blog-passwd)
+                               (:username . "mdorman@ironicdesign.com")
+                               (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
+      (org-blog-new)
+      (should (equal (org-blog-post-to-blog (org-blog-buffer-extract-post)) final-blog-param)))))
