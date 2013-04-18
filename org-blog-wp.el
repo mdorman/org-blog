@@ -210,6 +210,23 @@ function to make other calls."
      #'(lambda (a b)
          (string< (car a) (car b))))))
 
+;;;; RPC entry point
+
+(defun org-blog-wp-call (blog call &rest args)
+  "Easy calls to WordPress API functions.
+
+This routine will take whatever information a user has available,
+fill in the rest (if the user is willing to cooperate) and then
+call the specified function and return the results."
+  (let ((blog-id (cdr (assq :blog-id blog)))
+        (func (intern (concat "org-blog-wp-" call)))
+        (password (cdr (assq :password blog)))
+        (username (cdr (assq :username blog)))
+        (xmlrpc (cdr (assq :xmlrpc blog))))
+    (if (fboundp func)
+        (apply func xmlrpc blog-id username password args)
+      (error "Can't find function %s" func))))
+
 ;;;; Define tests if ert is loaded
 (when (featurep 'ert)
   (ert-deftest ob-test-post-to-wp ()
