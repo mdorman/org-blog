@@ -112,6 +112,17 @@ we default to unknown."
   (unless (= 0 (length string))
     string))
 
+(defun org-blog-call (blog call &rest args)
+  "Make the specified call to the appropriate blog engine.
+
+This allows us to maintain multiple engines, with a set of
+operations common to all, and call the appropriate function based
+on the engine specification in the entry in `org-blog-alist'."
+  (let ((entry (intern (concat "org-blog-" (cdr (assq :engine blog)) "-call"))))
+    (if (fboundp entry)
+        (apply entry blog call args)
+      (error (format  "Can't find function %s" entry)))))
+
 (defun org-blog-post-to-blog (post)
   "Determine the blog to use for the given post.
 
