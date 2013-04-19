@@ -112,6 +112,22 @@ we default to unknown."
   (unless (= 0 (length string))
     string))
 
+(defun org-blog-save ()
+  "Publish an article to a server and save locally.
+
+By default org-blog will try and save the article in a heirarchy
+that mirrors the permalink structure for the blog in question."
+  (interactive)
+  (condition-case failure
+      (let* ((post (org-blog-buffer-extract-post))
+             (blog (org-blog-post-to-blog post))
+             (post-id (if (cdr (assq :id post))
+                          (org-blog-call blog "post-update" (cdr (assq :id post)) post)
+                        (org-blog-call blog "post-create" post)))
+             (post (org-blog-call blog "post-retrieve" post-id)))
+        (org-blog-buffer-merge-post (org-blog-wp-to-post post)))
+    (error (apply 'message (cdr failure)))))
+
 (defun org-blog-call (blog call &rest args)
   "Make the specified call to the appropriate blog engine.
 
@@ -243,4 +259,35 @@ available in org-blog-alist."
                                (:username . "mdorman@ironicdesign.com")
                                (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
       (org-blog-new)
-      (should (equal (org-blog-post-to-blog (org-blog-buffer-extract-post)) final-blog-param)))))
+      (should (equal (org-blog-post-to-blog (org-blog-buffer-extract-post)) final-blog-param))))
+
+  (ert-deftest ob-test-org-blog-save ()
+    "Transfer from buffers to posts and back again"
+    (let* ((debug-on-error 1)
+           (xml-rpc-debug 5)
+           (blog (org-blog-wp-params '((:blog-id . 46183217)
+                                       (:directory . "~/org/blogging")
+                                       (:engine . "wp")
+                                       (:username . "mdorman@ironicdesign.com")
+                                       (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
+           (org-blog-alist (list (cons "testing" blog))))
+      (with-temp-buffer
+        (insert "\
+#+POST_BLOG: testing
+#+POST_CATEGORY: testing, repetitious
+#+DATE: [2013-01-25 Fri 10:00]
+#+DESCRIPTION: This is an automated test-post
+#+POST_STATUS: publish
+#+KEYWORDS: testing, automation, emacs rocks
+#+TITLE: Testing, testing, 1, 2, 3, 4
+#+POST_TYPE: post
+
+There's *really* not much to see here.  This is an automated post
+for testing org-blog, so we're really just focussed on whether it
+works at all, not the content of the post.")
+        (org-blog-save)
+        (print (buffer-string))
+        (goto-char (point-max))
+        (insert "\n\nThis is a little additional text")
+        (org-blog-save))))
+  )
