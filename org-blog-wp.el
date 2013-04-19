@@ -227,6 +227,39 @@ call the specified function and return the results."
         (apply func xmlrpc blog-id username password args)
       (error "Can't find function %s" func))))
 
+(defun org-blog-wp-post-create (xmlrpc blog-id username password post)
+  "Create a post on the blog."
+  (xml-rpc-method-call xmlrpc
+                       'wp.newPost
+                       blog-id
+                       username
+                       password
+                       (org-blog-post-to-wp post)))
+
+
+(defun org-blog-wp-post-retrieve (xmlrpc blog-id username password post-id &optional fields)
+  "Fetches a single post from the weblog system."
+  (let ((params (list xmlrpc
+                      'wp.getPost
+                      blog-id
+                      username
+                      password
+                      post-id)))
+    (when fields
+      (append params (list fields) nil))
+    (apply 'xml-rpc-method-call params)))
+
+(defun org-blog-wp-post-update (xmlrpc blog-id username password post-id post)
+  "Edit an existing post on the blog."
+  (xml-rpc-method-call xmlrpc
+                       'wp.editPost
+                       blog-id
+                       username
+                       password
+                       post-id
+                       (org-blog-post-to-wp post))
+  post-id)
+
 ;;;; Define tests if ert is loaded
 (when (featurep 'ert)
   (ert-deftest ob-test-post-to-wp ()
