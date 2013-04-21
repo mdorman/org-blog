@@ -33,6 +33,7 @@ Commands:
 
 \\{org-blog-mode-map}"
   :init-value nil
+  :keymap '(([?\C-c ?\C-b ?p] . org-blog-save))
   :lighter " org-blog")
 
 (defcustom org-blog-alist nil
