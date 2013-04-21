@@ -1,0 +1,28 @@
+* Design and implementation
+
+Although I personally only use WordPress, I wanted to be sure to allow
+others the latitude to use whatever back-end they wanted; I even hope
+that users of static blog generators will be able to harness things.
+As a consequence, =org-blog= uses some abstraction and indirection to
+keep its options open.
+
+** Post
+
+=org-blog= is organized around the concept of a `post'.  This is an
+fairly minimalist representation of the structure of a post on a blog.
+
+A post is an alist consisting of the fields:
+
+ - :blog (#+POST_BLOG) :: A string naming an entry in org-blog-alist
+ - :category (#+POST_CATEGORY) :: A list of strings naming categories to which the post belongs
+ - :content (body after export) :: A string containing HTML-formatted content
+ - :date (#+DATE) :: A date and time for the post
+ - :excerpt (#+DESCRIPTION) :: A string containing an optional excerpt of the post 
+ - :id (#+POST_ID) :: A string containing a unique ID (generally numeric) for the post
+ - :link (#+POST_LINK) :: A string containing a link to the permanent location of the post
+ - :name (#+POST_NAME) :: A string containing the canonical name for the post
+ - :parent (#+POST_PARENT) :: A string containing a unique ID (generally numeric) for the parent of the post
+ - :status (#+POST_STATUS) :: A string denoting the status (`draft', `published') of the post
+ - :tags (#+KEYWORDS) :: A list of strings representing the names of tags
+ - :title (#+TITLE) :: A string containing the title of the post
+ - :type (#+POST_TYPE) :: A string containing an optional format for the post
