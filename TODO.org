@@ -1,0 +1,57 @@
+* TODO Automate mirroring the post into a directory heirarchy
+
+  Starting from the permalink (at least in WordPress), you could
+  easily construct a filename to save under, rooted under a directory
+  you specify.  We could give the option for posting to automatically
+  prompt to save the file in that spot as well.
+
+* TODO Packaging for MELPA or whatever
+
+  I don't use the Emacs packaging tools, so I don't really know what's
+  involved.  I presume it's simple.
+
+* TODO Make it so the tests only prompt for the test blog password once
+  
+  That's the only thing that annoys me about running the tests right now.
+
+* TODO Autocompletion of categories or tags
+
+  One thing I appreciated about org2blog (though it's implementation
+  had some warts).
+
+* TODO Convert to be compatible with the Org 8.0 exporter
+
+  I have no idea what will be involved---our own sub-exporter of html?
+
+* TODO More testing
+
+  I really want this to be rock-solid, so testing some of the more
+  perverse permutations of things would be nice, to make sure they
+  work as intended.
+
+* TODO More back-ends
+
+  It's not that I love WordPress, really.  I would love to see other
+  options supported---perhaps even static blogging options.  I think
+  I've kept things sufficiently open to allow that.
+
+* TODO More idiomatic, better code
+
+  It's my first Emacs project, what do you expect?
+
+* TODO A customize interface
+
+  I don't use it myself, really, but it would be a very nice thing.
+  I'm fairly certain that everything necessary could be done that way,
+  so it would be mighty cool.
+
+* TODO More automation for setup
+
+  It should be possible, in theory, to be given the URL of a blog
+  (true for WP, and I imagine for others) and have it autodiscover the
+  posting interface, prompt for username and password, and retrieve
+  whatever else it needs and then save it somewhere for the user to
+  use.  Gets around the =:blog-id= sort of stuff, or even having to
+  know about =xmlrpc.php=.
+
+  

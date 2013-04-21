@@ -1,0 +1,131 @@
+#+TITLE: org-blog - simple blog writing and publishing using org-mode
+
+The purpose of org-blog is to allow you to use org-mode markup to
+create content for one or more blogs, keep local copies of articles,
+synchronize local and remote copies as much as is sensible, and do it
+all from within emacs with a minimum of fuss.
+
+It's not there yet, by any means.
+
+* The 5-second introduction
+
+ - Use =M-x org-blog-new= to start a new article.
+
+ - Fill in the header information
+
+ - Create your content
+
+ - Use =C-c C-b p= to post the article
+
+ - Use =C-x C-s= to save the article
+
+* The somewhat longer introduction
+
+What I didn't mention in the 5-second introduction is that this will
+prompt you for a lot of stuff each time you go through the process,
+and you won't have access to the full capabilities of the system---but
+it *will* work (assuming, for the moment, that you're using [[http://wordpress.org/][WordPress]],
+though I hope that will change before long).
+
+A little configuration can go a long way toward making the ease the
+5-second introduction promises a reality.
+
+** Configure
+
+Eventually we will have a =M-x customize= interface, but for the
+moment you must do it by hand.
+
+Configuration consists almost entirely of telling =org-blog= about the
+blogs you want to write for.
+
+The simplest configuration simply tells =org-blog= the names of your
+blogs:
+
+#+BEGIN_SRC elisp
+  (setq org-blog-alist '(("foo.example.com")
+                         ("bar.example.com")))
+#+END_SRC
+
+A name can be *any* string---but you should choose carefully, because
+if you change it in the =org-blog-alist=, you *will* need to change it
+in local copies of older articles if you want to be able to update
+them with =org-blog=.
+
+A more complete configuration starts to tell =org-blog= about how to
+access the blog.  The single most important piece of information is
+what sort of blogging software, This is the =:engine=.  Right now the
+only package we support is [[http://wordpress.org/][WordPress (denoted as "wp")]], but it's not
+an excessive amount of effort to add support for other platforms.
+
+#+BEGIN_SRC elisp
+  (setq org-blog-alist '(("foo.example.com" . ((:engine . "wp"))))
+#+END_SRC
+
+What other parameters are appropriate depend on the =:engine=.
+
+*** WordPress
+
+An example WordPress blog configuration looks like:
+
+#+BEGIN_SRC elisp
+  (setq org-blog-alist '(("foo.example.com" . ((:blog-id . 1)
+                                               (:engine . "wp")
+                                               (:password . "Pantheon Idiot Vigor")
+                                               (:username .  "notarealuser")
+                                               (:xmlrpc . "http://blog1.example.com/xmlrpc.php")))))
+#+END_SRC
+
+The fields are as follows:
+
+**** =:blog-id=
+
+This is the ID of the blog.  If you don't know it, and you've only got
+one blog on the server, don't worry about it, we can figure it out
+automatically.  If you have more than one, things get more
+interesting.  We don't yet help you figure out what the right entry
+is.
+
+**** =:password=
+
+This is the password used for posting articles to the server.
+
+**** =:username=
+
+This is the username used for posting articles to the server.
+
+**** =:xmlrpc=
+
+This is the URL used for posting articles to the server.  It will
+almost always end in =xmlrpc.php= for WordPress blogs.
+
+*** Other
+
+We'll add information on other blogging engines as we add them.
+
+** Write
+
+As above, begin a new article with =M-x org-blog-new=---if you have
+more than one blog, it will prompt you to choose the one for which the
+post is intended.  This isn't really obligating you to anything---you
+can change what's in the file once you've started editing.
+
+A new buffer will be created, and filled in with a template of the
+values you might want to specify for this article.  Write away, using
+the full power of org-mode markup (with some caveats we will figure
+out as we go along).
+
+** Post it
+
+When you go to post the article using =C-c C-b p=, you will be prompted
+to provide any of the information you did not include in the
+=org-blog-alist=.
+
+A copy of the article will be sent to the blogging engine, and then
+any additional information necessary for keeping things in sync will
+be retrieved and recorded in the buffer.
+
+You should then save the article to a file.
+
+** Done
+
+On a day-to-day basis, there's not much more to it than that.
