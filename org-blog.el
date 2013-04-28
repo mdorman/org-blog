@@ -306,7 +306,6 @@ There's *really* not much to see here.  This is an automated post
 for testing org-blog, so we're really just focussed on whether it
 works at all, not the content of the post."))
           (org-blog-save)
-          ;; (print (buffer-string))
           (goto-char (point-max))
           (insert "\n\nThis is a little additional text")
           (org-blog-save))))))

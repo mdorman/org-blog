@@ -88,7 +88,6 @@ update the buffer to reflect the values it contains."
                  val existing)
              (when (cdr (assq k org-blog-post-mapping))
                (setq val (cond ((eq v nil)
-                                (print "setting val to nil")
                                 nil)
                                ((eq k :date)
                                 (format-time-string "[%Y-%m-%d %a %H:%M]" v))
@@ -99,7 +98,6 @@ update the buffer to reflect the values it contains."
                                (t
                                 "default")))
                (goto-char (point-min))
-               ;; (print (format "Comparison for %s is %s against %s" k v (cdr (assq k current))))
                (cond
                 ;; Inserting a new keyword
                 ((eq (cdr (assq k current)) nil)

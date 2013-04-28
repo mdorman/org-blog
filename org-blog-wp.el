@@ -193,7 +193,6 @@ function to make other calls."
                                                       (reduce
                                                        #'(lambda (entry)
                                                            (when (string= (cdr (assoc "blogName" entry)))
-                                                             (print (format "XMLRPC from server is %s" (cdr (assoc "xmlrpc" userblog))))
                                                              (setcdr (assq :xmlrpc complete) (cdr (assoc "xmlrpc" userblog)))
                                                              (cdr (assoc "blogid" userblog))))
                                                        userblogs
