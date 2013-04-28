@@ -188,7 +188,8 @@ available in org-blog-alist."
 (when (featurep 'ert)
   (require 'el-mock)
   (setq message-log-max t
-        test-time (current-time))
+        test-time (current-time)
+        xml-rpc-debug 5)
   (ert-deftest ob-test-enable-org-blog-mode ()
     "Test turning on the org-blog minor mode"
     (with-temp-buffer
@@ -281,7 +282,6 @@ available in org-blog-alist."
   (ert-deftest ob-test-org-blog-save ()
     "Transfer from buffers to posts and back again"
     (let* ((debug-on-error 1)
-           (xml-rpc-debug 5)
            (blog (org-blog-wp-params `((:blog-id . 46183217)
                                        (:directory . "~/org/blogging")
                                        (:engine . "wp")

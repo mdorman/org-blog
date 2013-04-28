@@ -262,6 +262,7 @@ call the specified function and return the results."
 
 ;;;; Define tests if ert is loaded
 (when (featurep 'ert)
+  (setq xml-rpc-debug 5)
   (ert-deftest ob-test-post-to-wp ()
     "Transfer from buffers to posts and back again"
     (let ((post1-struct '((:blog . "t1b")
