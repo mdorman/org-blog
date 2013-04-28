@@ -47,18 +47,34 @@ them.")
 
 Each loaded back-end should add its name to the list.")
 
-(defconst org-blog-post-mapping '((:blog :org "POST_BLOG")
-                                  (:category :org "POST_CATEGORY")
-                                  (:date :org "DATE")
-                                  (:excerpt :org "DESCRIPTION")
-                                  (:id :org "POST_ID")
-                                  (:link :org "POST_LINK")
-                                  (:name :org "POST_NAME")
-                                  (:parent :org "POST_PARENT")
-                                  (:status :org "POST_STATUS")
-                                  (:tags :org "KEYWORDS")
-                                  (:title :org "TITLE")
-                                  (:type :org "POST_TYPE")))
+(defun org-blog-property-split (v i)
+  "Get a property split on commas."
+  (when v
+    (split-string (org-blog-property-strip v i) "\\( *, *\\)" t)))
+
+(defun org-blog-property-strip (v i)
+  "Strip properties from a property string."
+  (when v
+    (set-text-properties 0 (length v) nil v)
+    v))
+
+(defun org-blog-date-format (v i)
+  "Properly format a date."
+  (date-to-time
+   (org-export-get-date i "%Y%m%dT%T%z")))
+
+(defconst org-blog-post-mapping '((:blog :attr "POST_BLOG" :from-buffer org-blog-property-strip)
+                                  (:category :attr "POST_CATEGORY" :from-buffer org-blog-property-split)
+                                  (:date :attr "DATE" :from-buffer org-blog-date-format)
+                                  (:description :attr "DESCRIPTION" :from-buffer org-blog-property-strip)
+                                  (:id :attr "POST_ID" :from-buffer org-blog-property-strip)
+                                  (:keywords :attr "KEYWORDS" :from-buffer org-blog-property-split)
+                                  (:link :attr "POST_LINK" :from-buffer org-blog-property-strip)
+                                  (:name :attr "POST_NAME" :from-buffer org-blog-property-strip)
+                                  (:parent :attr "POST_PARENT" :from-buffer org-blog-property-strip)
+                                  (:status :attr "POST_STATUS" :from-buffer org-blog-property-strip)
+                                  (:title :attr "TITLE" :from-buffer (lambda (v i) (org-blog-property-strip (car v) i)))
+                                  (:type :attr "POST_TYPE" :from-buffer org-blog-property-strip)))
 
 (require 'org-blog-buffer)
 (require 'org-blog-wp)
@@ -85,10 +101,10 @@ empty fields that the user may wish to fill in."
     (org-blog-buffer-merge-post (list (cons :blog name)
                                       (cons :category "")
                                       (cons :date (current-time))
-                                      (cons :excerpt "")
+                                      (cons :description "")
                                       (cons :format "post")
+                                      (cons :keywords "")
                                       (cons :status "publish")
-                                      (cons :tags "")
                                       (cons :title "")
                                       (cons :type "post")))))
 
@@ -171,7 +187,9 @@ available in org-blog-alist."
 ;;;; Define tests if ert is loaded
 (when (featurep 'ert)
   (require 'el-mock)
-  (setq message-log-max t)
+  (setq message-log-max t
+        test-time (current-time)
+        xml-rpc-debug 5)
   (ert-deftest ob-test-enable-org-blog-mode ()
     "Test turning on the org-blog minor mode"
     (with-temp-buffer
@@ -187,108 +205,107 @@ available in org-blog-alist."
   (ert-deftest ob-test-get-name-from-completing-read ()
     "Test getting the blog name from completing-read"
     (with-mock
-     (stub completing-read => "baz")
-     (should (string= (org-blog-get-name) "baz"))))
+      (stub completing-read => "baz")
+      (should (string= (org-blog-get-name) "baz"))))
   (ert-deftest ob-test-get-name-from-default ()
     "Test getting the blog name from default"
     (with-mock
-     (stub completing-read => "")
-     (should (string= (org-blog-get-name) "unknown"))))
+      (stub completing-read => "")
+      (should (string= (org-blog-get-name) "unknown"))))
   (ert-deftest ob-test-org-blog-new-from-alist ()
     "Test creating a new blog post with an alist"
     (with-mock
-     (stub current-time => '(20738 4432))
-     (let ((org-blog-alist '(("bar")))
-           (post-string "\
+      (stub current-time => test-time)
+      (let ((org-blog-alist '(("bar")))
+            (post-string (concat "\
 #+POST_BLOG: bar
 #+POST_CATEGORY: 
-#+DATE: [2013-01-25 Fri 00:00]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R" (current-time)) "]
 #+DESCRIPTION: 
-#+POST_STATUS: publish
 #+KEYWORDS: 
+#+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
-"))
-       (org-blog-new)
-       (should (string= (org-no-properties (buffer-string)) post-string)))))
+")))
+        (org-blog-new)
+        (should (string= (org-no-properties (buffer-string)) post-string)))))
   (ert-deftest ob-test-org-blog-new-from-completing-read ()
     "Test creating a new blog post using completing-read"
     (with-mock
-     (stub current-time => '(20738 4432))
-     (stub completing-read => "baz")
-     (let ((post-string "\
+      (stub current-time => test-time)
+      (stub completing-read => "baz")
+      (let ((post-string (concat "\
 #+POST_BLOG: baz
 #+POST_CATEGORY: 
-#+DATE: [2013-01-25 Fri 00:00]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R" (current-time)) "]
 #+DESCRIPTION: 
-#+POST_STATUS: publish
 #+KEYWORDS: 
+#+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
-"))
-       (org-blog-new)
-       (should (string= (org-no-properties (buffer-string)) post-string)))))
+")))
+        (org-blog-new)
+        (should (string= (org-no-properties (buffer-string)) post-string)))))
   (ert-deftest ob-test-org-blog-new-from-default ()
     "Test creating a new blog post with a default"
     (with-mock
-     (stub current-time => '(20738 4432))
-     (stub completing-read => "")
-     (let ((org-blog-alist '(("bar")))
-           (post-string "\
+      (stub current-time => test-time)
+      (stub completing-read => "")
+      (let ((org-blog-alist '(("bar")))
+            (post-string (concat "\
 #+POST_BLOG: bar
 #+POST_CATEGORY: 
-#+DATE: [2013-01-25 Fri 00:00]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R" (current-time)) "]
 #+DESCRIPTION: 
-#+POST_STATUS: publish
 #+KEYWORDS: 
+#+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
-"))
-       (org-blog-new)
-       (should (string= (org-no-properties (buffer-string)) post-string)))))
+")))
+        (org-blog-new)
+        (should (string= (org-no-properties (buffer-string)) post-string)))))
 
   (ert-deftest ob-test-org-blog-post-to-blog ()
     "Test getting the blog information from a blog post"
-    (let* ((blog-passwd (read-passwd "Password for blog listing: "))
-           (org-blog-alist `(("bar" . ((:engine . "wp")
-                                       (:xmlrpc . "http://wordpress.com/xmlrpc.php")
-                                       (:username . "mdorman@ironicdesign.com")
-                                       (:password . ,blog-passwd)))))
-           (final-blog-param `((:blog-id . "46183217")
-                               (:engine . "wp")
-                               (:password . ,blog-passwd)
-                               (:username . "mdorman@ironicdesign.com")
-                               (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
+    (let ((org-blog-alist `(("bar" . ((:engine . "wp")
+                                      (:xmlrpc . "http://wordpress.com/xmlrpc.php")
+                                      (:username . "mdorman@ironicdesign.com")
+                                      (:password . ,org-blog-test-password)))))
+          (final-blog-param `((:blog-id . "46183217")
+                              (:engine . "wp")
+                              (:password . ,org-blog-test-password)
+                              (:username . "mdorman@ironicdesign.com")
+                              (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
       (org-blog-new)
       (should (equal (org-blog-post-to-blog (org-blog-buffer-extract-post)) final-blog-param))))
 
   (ert-deftest ob-test-org-blog-save ()
     "Transfer from buffers to posts and back again"
     (let* ((debug-on-error 1)
-           (xml-rpc-debug 5)
-           (blog (org-blog-wp-params '((:blog-id . 46183217)
+           (blog (org-blog-wp-params `((:blog-id . 46183217)
                                        (:directory . "~/org/blogging")
                                        (:engine . "wp")
+                                       (:password . ,org-blog-test-password)
                                        (:username . "mdorman@ironicdesign.com")
                                        (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
            (org-blog-alist (list (cons "testing" blog))))
-      (with-temp-buffer
-        (insert "\
+      (with-mock
+        (stub current-time => test-time)
+        (with-temp-buffer
+          (insert (concat "\
 #+POST_BLOG: testing
 #+POST_CATEGORY: testing, repetitious
-#+DATE: [2013-01-25 Fri 10:00]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R" (current-time)) "]
 #+DESCRIPTION: This is an automated test-post
-#+POST_STATUS: publish
 #+KEYWORDS: testing, automation, emacs rocks
+#+POST_STATUS: publish
 #+TITLE: Testing, testing, 1, 2, 3, 4
 #+POST_TYPE: post
 
 There's *really* not much to see here.  This is an automated post
 for testing org-blog, so we're really just focussed on whether it
-works at all, not the content of the post.")
-        (org-blog-save)
-        (print (buffer-string))
-        (goto-char (point-max))
-        (insert "\n\nThis is a little additional text")
-        (org-blog-save))))
-  )
+works at all, not the content of the post."))
+          (org-blog-save)
+          (goto-char (point-max))
+          (insert "\n\nThis is a little additional text")
+          (org-blog-save))))))
