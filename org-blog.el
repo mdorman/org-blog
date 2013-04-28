@@ -47,18 +47,34 @@ them.")
 
 Each loaded back-end should add its name to the list.")
 
-(defconst org-blog-post-mapping '((:blog :attr "POST_BLOG")
-                                  (:category :attr "POST_CATEGORY")
-                                  (:date :attr "DATE")
-                                  (:excerpt :attr "DESCRIPTION")
-                                  (:id :attr "POST_ID")
-                                  (:link :attr "POST_LINK")
-                                  (:name :attr "POST_NAME")
-                                  (:parent :attr "POST_PARENT")
-                                  (:status :attr "POST_STATUS")
-                                  (:tags :attr "KEYWORDS")
-                                  (:title :attr "TITLE")
-                                  (:type :attr "POST_TYPE")))
+(defun org-blog-property-split (v i)
+  "Get a property split on commas."
+  (when v
+    (split-string (org-blog-property-strip v i) "\\( *, *\\)" t)))
+
+(defun org-blog-property-strip (v i)
+  "Strip properties from a property string."
+  (when v
+    (set-text-properties 0 (length v) nil v)
+    v))
+
+(defun org-blog-date-format (v i)
+  "Properly format a date."
+  (date-to-time
+   (org-export-get-date i "%Y%m%dT%T%z")))
+
+(defconst org-blog-post-mapping '((:blog :attr "POST_BLOG" :from-buffer org-blog-property-strip)
+                                  (:category :attr "POST_CATEGORY" :from-buffer org-blog-property-split)
+                                  (:date :attr "DATE" :from-buffer org-blog-date-format)
+                                  (:description :attr "DESCRIPTION" :from-buffer org-blog-property-strip)
+                                  (:id :attr "POST_ID" :from-buffer org-blog-property-strip)
+                                  (:keywords :attr "KEYWORDS" :from-buffer org-blog-property-split)
+                                  (:link :attr "POST_LINK" :from-buffer org-blog-property-strip)
+                                  (:name :attr "POST_NAME" :from-buffer org-blog-property-strip)
+                                  (:parent :attr "POST_PARENT" :from-buffer org-blog-property-strip)
+                                  (:status :attr "POST_STATUS" :from-buffer org-blog-property-strip)
+                                  (:title :attr "TITLE" :from-buffer (lambda (v i) (org-blog-property-strip (car v) i)))
+                                  (:type :attr "POST_TYPE" :from-buffer org-blog-property-strip)))
 
 (require 'org-blog-buffer)
 (require 'org-blog-wp)
@@ -85,10 +101,10 @@ empty fields that the user may wish to fill in."
     (org-blog-buffer-merge-post (list (cons :blog name)
                                       (cons :category "")
                                       (cons :date (current-time))
-                                      (cons :excerpt "")
+                                      (cons :description "")
                                       (cons :format "post")
+                                      (cons :keywords "")
                                       (cons :status "publish")
-                                      (cons :tags "")
                                       (cons :title "")
                                       (cons :type "post")))))
 
@@ -204,8 +220,8 @@ available in org-blog-alist."
 #+POST_CATEGORY: 
 #+DATE: [2013-01-25 Fri 00:00]
 #+DESCRIPTION: 
-#+POST_STATUS: publish
 #+KEYWORDS: 
+#+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
 "))
@@ -221,8 +237,8 @@ available in org-blog-alist."
 #+POST_CATEGORY: 
 #+DATE: [2013-01-25 Fri 00:00]
 #+DESCRIPTION: 
-#+POST_STATUS: publish
 #+KEYWORDS: 
+#+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
 "))
@@ -239,8 +255,8 @@ available in org-blog-alist."
 #+POST_CATEGORY: 
 #+DATE: [2013-01-25 Fri 00:00]
 #+DESCRIPTION: 
-#+POST_STATUS: publish
 #+KEYWORDS: 
+#+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
 "))
@@ -278,8 +294,8 @@ available in org-blog-alist."
 #+POST_CATEGORY: testing, repetitious
 #+DATE: [2013-01-25 Fri 10:00]
 #+DESCRIPTION: This is an automated test-post
-#+POST_STATUS: publish
 #+KEYWORDS: testing, automation, emacs rocks
+#+POST_STATUS: publish
 #+TITLE: Testing, testing, 1, 2, 3, 4
 #+POST_TYPE: post
 

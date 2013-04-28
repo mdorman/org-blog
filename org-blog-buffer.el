@@ -23,74 +23,54 @@
 (provide 'org-blog-buffer)
 
 (require 'org)
-(require 'org-exp)
+(require 'ox)
+(require 'ox-html)
 (require 'org-blog)
 
 (eval-when-compile
   (require 'cl))
 
-(defconst org-blog-buffer-fields (sort
-                                  (reduce
-                                   #'(lambda (l i)
-                                       (let ((field (plist-get (cdr i) :attr)))
-                                         (if (and (< 5 (length field))
-                                                  (string= (substring field 0 5) "POST_"))
-                                             (cons (list field (car i)) l)
-                                           l)))
-                                   org-blog-post-mapping
-                                   :initial-value nil)
-                                  #'(lambda (a b)
-                                      (string< (car b) (car a)))))
+(defconst org-blog-buffer-options-alist
+  (reduce
+   (lambda (l i)
+     (let ((field (plist-get (cdr i) :attr)))
+       (if (string-prefix-p "POST_" field t)
+           (cons (list (car i) field nil nil t) l)
+         l)))
+   org-blog-post-mapping
+   :initial-value nil))
+
+(org-export-define-derived-backend 'blog 'html
+                                   :options-alist org-blog-buffer-options-alist)
 
 (defun org-blog-buffer-extract-post ()
   "Transform a buffer into a post.
 
 We do as little processing as possible on individual items, to
 retain the maximum flexibility for further transformation."
-  (save-excursion
-    (save-restriction
-      (let ((org-export-inbuffer-options-extra org-blog-buffer-fields)
-            (org-export-date-timestamp-format "%Y%m%dT%T%z")
-            (org-export-with-preserve-breaks nil)
-            (org-export-with-priority nil)
-            (org-export-with-section-numbers nil)
-            (org-export-with-sub-superscripts nil)
-            (org-export-with-tags nil)
-            (org-export-with-toc nil)
-            (org-export-with-todo-keywords nil))
-        (sort
-         (list (cons :blog (property-trim :blog))
-               (cons :category (property-split :category))
-               (cons :date (let ((timestamp (property-trim :date)))
-                             (when timestamp
-                               (date-to-time timestamp))))
-               (cons :excerpt (property-trim :description))
-               (cons :id (property-trim :id))
-               (cons :link (property-trim :link))
-               (cons :name (property-trim :name))
-               (cons :parent (property-trim :parent))
-               (cons :status (property-trim :status))
-               (cons :tags (property-split :keywords))
-               (cons :title (property-trim :title))
-               (cons :type (property-trim :type))
-               (cons :content (org-no-properties (condition-case nil
-                                                     (org-export-as-html nil nil nil 'string t nil)
-                                                   (wrong-number-of-arguments
-                                                    (org-export-as-html nil nil 'string t nil))))))
-         #'(lambda (a b)
-             (string< (car a) (car b))))))))
-
-(defun property-trim (k)
-  "Get a property value trimmed of leading spaces."
-  (let ((v (plist-get (org-infile-export-plist) k)))
-    (when v
-      (replace-regexp-in-string "^[[:space:]]+" "" v))))
-
-(defun property-split (k)
-  "Get a property value trimmed of leading spaces and split on commas."
-  (let ((v (property-trim k)))
-    (when v
-      (split-string v "\\( *, *\\)" t))))
+  (let ((content
+         (org-export-as 'blog nil nil t '(:preserve-breaks nil
+                                          :section-numbers nil
+                                          :with-tags nil
+                                          :with-toc nil
+                                          :with-todo-keywords nil)))
+        (attrs
+         (org-export-get-environment 'blog)))
+    (sort
+     (reduce
+      (lambda (l i)
+        (let ((v (plist-get attrs (car i)))
+              (filter (plist-get (cdr i) :from-buffer)))
+          (if v
+              (cons (cons (car i) (if filter
+                                      (funcall filter v attrs)
+                                    v)) l)
+            l)))
+      org-blog-post-mapping
+      :initial-value (when content
+                       (list (cons :content content))))
+     (lambda (a b)
+       (string< (car a) (car b))))))
 
 (defun org-blog-buffer-merge-post (merge)
   "Merge a post into a buffer.
@@ -142,21 +122,7 @@ update the buffer to reflect the values it contains."
   (ert-deftest ob-test-extract-from-empty ()
     "Try extracting a post from an empty buffer."
     (with-temp-buffer
-      (let ((post-string "")
-            (post-struct '((:blog)
-                           (:category)
-                           (:content . "\n")
-                           (:date)
-                           (:excerpt)
-                           (:id)
-                           (:link)
-                           (:name)
-                           (:parent)
-                           (:status)
-                           (:tags)
-                           (:title)
-                           (:type))))
-        (should (equal (org-blog-buffer-extract-post) post-struct)))))
+      (should (equal (org-blog-buffer-extract-post) nil))))
 
   (ert-deftest ob-test-extract-from-buffer ()
     "Try extracting a post from a buffer with stuff set."
@@ -167,24 +133,22 @@ update the buffer to reflect the values it contains."
 #+DATE: [2013-01-25 Fri 00:00]
 #+DESCRIPTION: t1e
 #+POST_ID: 1
+#+KEYWORDS: t1k1, t1k2, t1k3
 #+POST_LINK: http://example.com/
 #+POST_NAME: t1n
-#+KEYWORDS: t1k1, t1k2, t1k3
 #+TITLE: Test 1 Title
 #+POST_TYPE: post
 
 Just a little bit of content.")
             (post-struct '((:blog . "t1b")
                            (:category "t1c1" "t1c2")
-                           (:content . "\n<p>Just a little bit of content.\n</p>")
+                           (:content . "<p>\nJust a little bit of content.</p>\n")
                            (:date 20738 4432)
-                           (:excerpt . "t1e")
+                           (:description . "t1e")
                            (:id . "1")
+                           (:keywords "t1k1" "t1k2" "t1k3")
                            (:link . "http://example.com/")
                            (:name . "t1n")
-                           (:parent)
-                           (:status)
-                           (:tags "t1k1" "t1k2" "t1k3")
                            (:title . "Test 1 Title")
                            (:type . "post"))))
         (insert post-string)
@@ -196,15 +160,15 @@ Just a little bit of content.")
       (let ((post-string "")
             (post-struct '((:blog)
                            (:category)
-                           (:content . "\n")
+                           (:content)
                            (:date)
-                           (:excerpt)
+                           (:description)
                            (:id)
+                           (:keywords)
                            (:link)
                            (:name)
                            (:parent)
                            (:status)
-                           (:tags)
                            (:title)
                            (:type))))
         (org-blog-buffer-merge-post post-struct)
@@ -219,25 +183,24 @@ Just a little bit of content.")
 #+DATE: [2013-01-25 Fri 00:00]
 #+DESCRIPTION: t1e
 #+POST_ID: 1
+#+KEYWORDS: t1k1, t1k2, t1k3
 #+POST_LINK: http://example.com/
 #+POST_NAME: t1n
 #+POST_PARENT: 0
 #+POST_STATUS: publish
-#+KEYWORDS: t1k1, t1k2, t1k3
 #+TITLE: Test 1 Title
 #+POST_TYPE: post
 ")
             (post-struct '((:blog . "t1b")
                            (:category "t1c1" "t1c2")
-                           (:content . "\n")
                            (:date 20738 4432)
-                           (:excerpt . "t1e")
+                           (:description . "t1e")
                            (:id . "1")
+                           (:keywords "t1k1" "t1k2" "t1k3")
                            (:link . "http://example.com/")
                            (:name . "t1n")
                            (:parent . "0")
                            (:status . "publish")
-                           (:tags "t1k1" "t1k2" "t1k3")
                            (:title . "Test 1 Title")
                            (:type . "post"))))
         (org-blog-buffer-merge-post post-struct)
@@ -252,25 +215,24 @@ you get the same thing out."
 #+DATE: [2013-01-25 Fri 00:00]
 #+DESCRIPTION: t2e
 #+POST_ID: 1
+#+KEYWORDS: t2k1, t2k2, t2k3
 #+POST_LINK: http://example.com/
 #+POST_NAME: t2n
 #+POST_PARENT: 0
 #+POST_STATUS: publish
-#+KEYWORDS: t2k1, t2k2, t2k3
 #+TITLE: Test 2 Title
 #+POST_TYPE: post
 ")
             (post-struct '((:blog . "t2b")
                            (:category "t2c1" "t2c2")
-                           (:content . "\n")
                            (:date 20738 4432)
-                           (:excerpt . "t2e")
+                           (:description . "t2e")
                            (:id . "1")
+                           (:keywords "t2k1" "t2k2" "t2k3")
                            (:link . "http://example.com/")
                            (:name . "t2n")
                            (:parent . "0")
                            (:status . "publish")
-                           (:tags "t2k1" "t2k2" "t2k3")
                            (:title . "Test 2 Title")
                            (:type . "post"))))
         (org-blog-buffer-merge-post post-struct)
