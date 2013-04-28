@@ -187,7 +187,8 @@ available in org-blog-alist."
 ;;;; Define tests if ert is loaded
 (when (featurep 'ert)
   (require 'el-mock)
-  (setq message-log-max t)
+  (setq message-log-max t
+        test-time (current-time))
   (ert-deftest ob-test-enable-org-blog-mode ()
     "Test turning on the org-blog minor mode"
     (with-temp-buffer
@@ -203,65 +204,65 @@ available in org-blog-alist."
   (ert-deftest ob-test-get-name-from-completing-read ()
     "Test getting the blog name from completing-read"
     (with-mock
-     (stub completing-read => "baz")
-     (should (string= (org-blog-get-name) "baz"))))
+      (stub completing-read => "baz")
+      (should (string= (org-blog-get-name) "baz"))))
   (ert-deftest ob-test-get-name-from-default ()
     "Test getting the blog name from default"
     (with-mock
-     (stub completing-read => "")
-     (should (string= (org-blog-get-name) "unknown"))))
+      (stub completing-read => "")
+      (should (string= (org-blog-get-name) "unknown"))))
   (ert-deftest ob-test-org-blog-new-from-alist ()
     "Test creating a new blog post with an alist"
     (with-mock
-     (stub current-time => '(20738 4432))
-     (let ((org-blog-alist '(("bar")))
-           (post-string "\
+      (stub current-time => test-time)
+      (let ((org-blog-alist '(("bar")))
+            (post-string (concat "\
 #+POST_BLOG: bar
 #+POST_CATEGORY: 
-#+DATE: [2013-01-25 Fri 00:00]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R" (current-time)) "]
 #+DESCRIPTION: 
 #+KEYWORDS: 
 #+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
-"))
-       (org-blog-new)
-       (should (string= (org-no-properties (buffer-string)) post-string)))))
+")))
+        (org-blog-new)
+        (should (string= (org-no-properties (buffer-string)) post-string)))))
   (ert-deftest ob-test-org-blog-new-from-completing-read ()
     "Test creating a new blog post using completing-read"
     (with-mock
-     (stub current-time => '(20738 4432))
-     (stub completing-read => "baz")
-     (let ((post-string "\
+      (stub current-time => test-time)
+      (stub completing-read => "baz")
+      (let ((post-string (concat "\
 #+POST_BLOG: baz
 #+POST_CATEGORY: 
-#+DATE: [2013-01-25 Fri 00:00]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R" (current-time)) "]
 #+DESCRIPTION: 
 #+KEYWORDS: 
 #+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
-"))
-       (org-blog-new)
-       (should (string= (org-no-properties (buffer-string)) post-string)))))
+")))
+        (org-blog-new)
+        (should (string= (org-no-properties (buffer-string)) post-string)))))
   (ert-deftest ob-test-org-blog-new-from-default ()
     "Test creating a new blog post with a default"
     (with-mock
-     (stub current-time => '(20738 4432))
-     (stub completing-read => "")
-     (let ((org-blog-alist '(("bar")))
-           (post-string "\
+      (stub current-time => test-time)
+      (stub completing-read => "")
+      (let ((org-blog-alist '(("bar")))
+            (post-string (concat "\
 #+POST_BLOG: bar
 #+POST_CATEGORY: 
-#+DATE: [2013-01-25 Fri 00:00]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R" (current-time)) "]
 #+DESCRIPTION: 
 #+KEYWORDS: 
 #+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
-"))
-       (org-blog-new)
-       (should (string= (org-no-properties (buffer-string)) post-string)))))
+")))
+        (org-blog-new)
+        (should (string= (org-no-properties (buffer-string)) post-string)))))
 
   (ert-deftest ob-test-org-blog-post-to-blog ()
     "Test getting the blog information from a blog post"
@@ -288,11 +289,13 @@ available in org-blog-alist."
                                        (:username . "mdorman@ironicdesign.com")
                                        (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
            (org-blog-alist (list (cons "testing" blog))))
-      (with-temp-buffer
-        (insert "\
+      (with-mock
+        (stub current-time => test-time)
+        (with-temp-buffer
+          (insert (concat "\
 #+POST_BLOG: testing
 #+POST_CATEGORY: testing, repetitious
-#+DATE: [2013-01-25 Fri 10:00]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R" (current-time)) "]
 #+DESCRIPTION: This is an automated test-post
 #+KEYWORDS: testing, automation, emacs rocks
 #+POST_STATUS: publish
@@ -301,10 +304,9 @@ available in org-blog-alist."
 
 There's *really* not much to see here.  This is an automated post
 for testing org-blog, so we're really just focussed on whether it
-works at all, not the content of the post.")
-        (org-blog-save)
-        (print (buffer-string))
-        (goto-char (point-max))
-        (insert "\n\nThis is a little additional text")
-        (org-blog-save))))
-  )
+works at all, not the content of the post."))
+          (org-blog-save)
+          ;; (print (buffer-string))
+          (goto-char (point-max))
+          (insert "\n\nThis is a little additional text")
+          (org-blog-save))))))
