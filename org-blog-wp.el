@@ -35,7 +35,7 @@
 (defconst org-blog-wp-alist
   (list (cons :category "category")
         (cons :content "post_content")
-        (cons :date "post_date_gmt")
+        (cons :date "post_date")
         (cons :description "post_excerpt")
         (cons :id "post_id")
         (cons :keywords "post_tag")
@@ -117,9 +117,8 @@ sorted."
                  post)
                 ((string= "terms" k)
                  (org-blog-wp-to-post-handle-taxonomy post v))
-                ((string= "post_date_gmt" k)
-                 ;; Must be a better way to extract this value
-                 (cons (cons (car (rassoc k org-blog-wp-alist)) (time-add (cadr v) (seconds-to-time (car (current-time-zone))))) post))
+                ((string= "post_date" k)
+                 (cons (cons (car (rassoc k org-blog-wp-alist)) (plist-get v :datetime)) post))
                 ((rassoc k org-blog-wp-alist)
                  (cons (cons (car (rassoc k org-blog-wp-alist)) v) post))
                 (t
@@ -297,7 +296,7 @@ call the specified function and return the results."
     (let ((post1-struct '((:blog . "t1b")
                           (:category "t1c1" "t1c2")
                           (:content . "<p>\nTest 1 Content</p>\n")
-                          (:date 20738 4432 0 0)
+                          (:date 20738 4432)
                           (:description . "t1e")
                           (:id . "1")
                           (:keywords "t1k1" "t1k2" "t1k3")
