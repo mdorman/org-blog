@@ -55,3 +55,7 @@
   know about =xmlrpc.php=.
 
   
+* DONE Fix date issues once and for all
+  Added some tests to make the failure repeatable, then fixed the
+  issue.  The fix is admittedly a hack, but it would appear to be a
+  reliable one, at least until WP changes its output.
