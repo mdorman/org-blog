@@ -188,8 +188,7 @@ available in org-blog-alist."
 (when (featurep 'ert)
   (require 'el-mock)
   (setq message-log-max t
-        test-time (current-time)
-        xml-rpc-debug 5)
+        test-time (current-time))
   (ert-deftest ob-test-enable-org-blog-mode ()
     "Test turning on the org-blog minor mode"
     (with-temp-buffer
