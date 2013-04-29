@@ -35,7 +35,7 @@
 (defconst org-blog-wp-alist
   (list (cons :category "category")
         (cons :content "post_content")
-        (cons :date "post_date")
+        (cons :date "post_date_gmt")
         (cons :description "post_excerpt")
         (cons :id "post_id")
         (cons :keywords "post_tag")
@@ -67,11 +67,8 @@ sorted."
                  (org-blog-post-to-wp-add-taxonomy wp "category" v))
                 ((eq :date k)
                  ;; Convert to GMT by adding seconds offset
-                 (cons
-                  (cons "post_date_gmt" (list :datetime
-                                              (time-add v
-                                                        (seconds-to-time (- (car (current-time-zone)))))))
-                  wp))
+                 (let ((gmt (time-add v (seconds-to-time (- (car (current-time-zone)))))))
+                   (cons (cons "post_date_gmt" (list :datetime gmt)) wp)))
                 ((eq :keywords k)
                  (org-blog-post-to-wp-add-taxonomy wp "post_tag" v))
                 ((eq :title k)
@@ -117,7 +114,7 @@ sorted."
                  post)
                 ((string= "terms" k)
                  (org-blog-wp-to-post-handle-taxonomy post v))
-                ((string= "post_date" k)
+                ((string= "post_date_gmt" k)
                  (cons (cons (car (rassoc k org-blog-wp-alist)) (plist-get v :datetime)) post))
                 ((rassoc k org-blog-wp-alist)
                  (cons (cons (car (rassoc k org-blog-wp-alist)) v) post))
@@ -265,7 +262,7 @@ call the specified function and return the results."
     (let ((post1-struct '((:blog . "t1b")
                           (:category "t1c1" "t1c2")
                           (:content . "<p>\nTest 1 Content</p>\n")
-                          (:date 20738 4432 0 0)
+                          (:date 20738 4432)
                           (:description . "t1e")
                           (:id . "1")
                           (:keywords "t1k1" "t1k2" "t1k3")
@@ -309,7 +306,7 @@ call the specified function and return the results."
                              ("post_date" :datetime
                               (20738 4432))
                              ("post_date_gmt" :datetime
-                              (20738 18832 0 0))
+                              (20738 4432))
                              ("post_modified" :datetime
                               (20738 4432))
                              ("post_modified_gmt" :datetime
