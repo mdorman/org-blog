@@ -82,7 +82,7 @@ update the buffer to reflect the values it contains."
       ;; Get the current values
       (let ((current (org-blog-buffer-extract-post)))
         (mapc
-         #'(lambda (item)
+         (lambda (item)
            (let ((k (car item))
                  (v (cdr item))
                  val existing)
@@ -112,8 +112,8 @@ update the buffer to reflect the values it contains."
          ;; Reverse sort fields to insert alphabetically
          (sort
           (copy-alist merge)
-          #'(lambda (a b)
-              (string< (car b) (car a)))))))))
+          (lambda (a b)
+            (string< (car b) (car a)))))))))
 
 ;;;; Declare tests if ert is loaded
 (when (featurep 'ert)
