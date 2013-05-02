@@ -41,7 +41,37 @@
    :initial-value nil))
 
 (org-export-define-derived-backend 'blog 'html
-                                   :options-alist org-blog-buffer-options-alist)
+  :filters-alist '((:filter-final-output . org-blog-filter-tag-newline)
+                   (:filter-plain-text . org-blog-filter-text-newlines))
+  :options-alist org-blog-buffer-options-alist)
+
+;;; Filters
+(defun org-blog-filter-tag-newline (content backend info)
+  "Remove superfluous leading space and trailing newlines from tags
+
+TREE is the parse tree being exported.  BACKEND is the export
+back-end used.  INFO is a plist used as a communication channel.
+
+Assume BACKEND is `blog'."
+  ;; (print (format "content is: %s" content))
+  ;; <tag>, </tag>, <tag/>, (replace-regexp-in-string "\\(<\\([[:alpha:]]+\\|/[[:alpha:]]+\\|[[:alpha:]]+/\\)>\\)\n+" "\\1" content)
+  (replace-regexp-in-string "\s*\\(<[^>]+>\\)\n+" "\\1" content))
+
+;;; Filters
+(defun org-blog-filter-text-newlines (content backend info)
+  "Remove superfluous newlines in elements (except verse blocks)
+
+TREE is the parse tree being exported.  BACKEND is the export
+back-end used.  INFO is a plist used as a communication channel.
+
+Assume BACKEND is `blog'."
+  ;; (print (format "content is: %s" content))
+  (print (format "parent is %s" (org-export-get-parent content)))
+  (cond ((eq 'verse-block (car (org-export-get-parent content)))
+         (print "in verse")
+         content)
+        (t
+         (replace-regexp-in-string "\n" " " content))))
 
 (defun org-blog-buffer-extract-post ()
   "Transform a buffer into a post.
@@ -137,10 +167,19 @@ update the buffer to reflect the values it contains."
 #+TITLE: Test 1 Title
 #+POST_TYPE: post
 
-Just a little bit of content.")
+Just a little bit of content.
+There is still part of the paragraph.  Line breaks are refolded.
+
+#+BEGIN_VERSE
+Though the material in verse should
+retain
+its line
+breaks
+#+END_VERSE
+")
             (post-struct '((:blog . "t1b")
                            (:category "t1c1" "t1c2")
-                           (:content . "<p>\nJust a little bit of content.</p>\n")
+                           (:content . "<p>Just a little bit of content. There is still part of the paragraph.  Line breaks are refolded.</p><p class=\"verse\">Though the material in verse should<br/>retain<br/>its line<br/>breaks<br/></p>")
                            (:date 20738 4432)
                            (:description . "t1e")
                            (:id . "1")
