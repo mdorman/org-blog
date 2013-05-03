@@ -33,7 +33,7 @@
 (defconst org-blog-buffer-options-alist
   (reduce
    (lambda (l i)
-     (let ((field (plist-get (cdr i) :attr)))
+     (let ((field (plist-get (cdr i) :to-buffer)))
        (if (string-prefix-p "POST_" field t)
            (cons (list (car i) field nil nil t) l)
          l)))
@@ -132,13 +132,13 @@ update the buffer to reflect the values it contains."
                 ;; Inserting a new keyword
                 ((eq (cdr (assq k current)) nil)
                  (when val
-                   (insert (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :attr) ": " val "\n"))))
+                   (insert (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val "\n"))))
                 ;; Updating an existing keyword
                 ((not (equal (cdr (assq k current)) val))
-                 (let ((re (org-make-options-regexp (list (plist-get (cdr (assq k org-blog-post-mapping)) :attr)) nil))
+                 (let ((re (org-make-options-regexp (list (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer)) nil))
                        (case-fold-search t))
                    (re-search-forward re nil t)
-                   (replace-match (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :attr) ": " val) t t)))))))
+                   (replace-match (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val) t t)))))))
          ;; Reverse sort fields to insert alphabetically
          (sort
           (copy-alist merge)
