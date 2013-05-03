@@ -303,7 +303,20 @@ available in org-blog-alist."
 
 There's *really* not much to see here.  This is an automated post
 for testing org-blog, so we're really just focussed on whether it
-works at all, not the content of the post."))
+works at all, not the content of the post.
+
+I do want some paragraph breaks
+and some odd
+short
+lines that should necessarily end up being part of a continuous paragraph.
+
+#+BEGIN_VERSE
+Though the material in verse should
+retain
+its line
+breaks
+#+END_VERSE
+"))
           (org-blog-save)
           (goto-char (point-max))
           (insert "\n\nThis is a little additional text")
