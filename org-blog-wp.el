@@ -58,26 +58,26 @@ For convenience in testing and inspection, the resulting alist is
 sorted."
   (sort
    (reduce
-    #'(lambda (wp new)
-        (let ((k (car new))
-              (v (cdr new)))
-          (cond ((eq v nil)
-                 wp)
-                ((eq :category k)
-                 (org-blog-post-to-wp-add-taxonomy wp "category" v))
-                ((eq :date k)
-                 ;; Convert to GMT by adding seconds offset
-                 (let ((gmt (time-add v (seconds-to-time (- (car (current-time-zone)))))))
-                   (cons (cons "post_date_gmt" (list :datetime gmt)) wp)))
-                ((eq :keywords k)
-                 (org-blog-post-to-wp-add-taxonomy wp "post_tag" v))
-                ((eq :title k)
-                 (cons (cons "post_title" (or v "No Title")) wp))
-                ((assq k org-blog-wp-alist)
-                 (cons (cons (cdr (assq k org-blog-wp-alist)) v) wp)))))
+    (lambda (wp new)
+      (let ((k (car new))
+            (v (cdr new)))
+        (cond ((eq v nil)
+               wp)
+              ((eq :category k)
+               (org-blog-post-to-wp-add-taxonomy wp "category" v))
+              ((eq :date k)
+               ;; Convert to GMT by adding seconds offset
+               (let ((gmt (time-add v (seconds-to-time (- (car (current-time-zone)))))))
+                 (cons (cons "post_date_gmt" (list :datetime gmt)) wp)))
+              ((eq :keywords k)
+               (org-blog-post-to-wp-add-taxonomy wp "post_tag" v))
+              ((eq :title k)
+               (cons (cons "post_title" (or v "No Title")) wp))
+              ((assq k org-blog-wp-alist)
+               (cons (cons (cdr (assq k org-blog-wp-alist)) v) wp)))))
     post :initial-value nil)
-   #'(lambda (a b)
-       (string< (car a) (car b)))))
+   (lambda (a b)
+     (string< (car a) (car b)))))
 
 (defun org-blog-post-to-wp-add-taxonomy (wp taxonomy entries)
   "Handle adding taxonomy items to a WordPress struct.
@@ -90,8 +90,8 @@ convenience in testing and inspection."
     (if existing
         (setcdr terms (sort
                        (cons struct existing)
-                       #'(lambda (a b)
-                           (string< (car a) (car b)))))
+                       (lambda (a b)
+                         (string< (car a) (car b)))))
       (push (list "terms_names" struct) wp))
     wp))
 
@@ -106,23 +106,23 @@ For convenience in testing and inspection, the resulting alist is
 sorted."
   (sort
    (reduce
-    #'(lambda (post new)
-        "Do key and value transformations."
-        (let ((k (car new))
-              (v (cdr new)))
-          (cond ((eq v nil)
-                 post)
-                ((string= "terms" k)
-                 (org-blog-wp-to-post-handle-taxonomy post v))
-                ((string= "post_date_gmt" k)
-                 (cons (cons (car (rassoc k org-blog-wp-alist)) (plist-get v :datetime)) post))
-                ((rassoc k org-blog-wp-alist)
-                 (cons (cons (car (rassoc k org-blog-wp-alist)) v) post))
-                (t
-                 post))))
+    (lambda (post new)
+      "Do key and value transformations."
+      (let ((k (car new))
+            (v (cdr new)))
+        (cond ((eq v nil)
+               post)
+              ((string= "terms" k)
+               (org-blog-wp-to-post-handle-taxonomy post v))
+              ((string= "post_date_gmt" k)
+               (cons (cons (car (rassoc k org-blog-wp-alist)) (plist-get v :datetime)) post))
+              ((rassoc k org-blog-wp-alist)
+               (cons (cons (car (rassoc k org-blog-wp-alist)) v) post))
+              (t
+               post))))
     wp :initial-value nil)
-   #'(lambda (a b)
-       (string< (car a) (car b)))))
+   (lambda (a b)
+     (string< (car a) (car b)))))
 
 (defun org-blog-wp-to-post-handle-taxonomy (post entries)
   "Handle mapping WordPress taxonomy info into a post struct.
@@ -142,10 +142,10 @@ glomming them onto the existing post."
 
 From here we can extract just the bits we need."
   (reduce
-   #'(lambda (lists term)
-       (let ((name (cdr (assoc "name" term)))
-             (taxonomy (cdr (assoc "taxonomy" term))))
-         (cons (append (list taxonomy) (cdr (assoc taxonomy lists)) (list name)) lists)))
+   (lambda (lists term)
+     (let ((name (cdr (assoc "name" term)))
+           (taxonomy (cdr (assoc "taxonomy" term))))
+       (cons (append (list taxonomy) (cdr (assoc taxonomy lists)) (list name)) lists)))
    terms :initial-value nil))
 
 (defun org-blog-wp-params (blog)
@@ -188,22 +188,22 @@ function to make other calls."
                                                      ;; Then shove the blog info into complete
                                                      (t
                                                       (reduce
-                                                       #'(lambda (entry)
-                                                           (when (string= (cdr (assoc "blogName" entry)))
-                                                             (setcdr (assq :xmlrpc complete) (cdr (assoc "xmlrpc" userblog)))
-                                                             (cdr (assoc "blogid" userblog))))
+                                                       (lambda (entry)
+                                                         (when (string= (cdr (assoc "blogName" entry)))
+                                                           (setcdr (assq :xmlrpc complete) (cdr (assoc "xmlrpc" userblog)))
+                                                           (cdr (assoc "blogid" userblog))))
                                                        userblogs
                                                        :initial-value (completing-read
                                                                        "Blog Name: "
-                                                                       (mapcar #'(lambda (entry)
-                                                                                   (cdr (assoc "blogName" entry)))
+                                                                       (mapcar (lambda (entry)
+                                                                                 (cdr (assoc "blogName" entry)))
                                                                                userblogs) nil t))))))
                              (error "Posting cancelled")))
           complete)
     (sort
      complete
-     #'(lambda (a b)
-         (string< (car a) (car b))))))
+     (lambda (a b)
+       (string< (car a) (car b))))))
 
 ;;;; RPC entry point
 
