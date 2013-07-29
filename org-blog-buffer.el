@@ -89,12 +89,14 @@ retain the maximum flexibility for further transformation."
     (sort
      (reduce
       (lambda (l i)
-        (let ((v (plist-get attrs (car i)))
-              (filter (plist-get (cdr i) :from-buffer)))
-          (if v
-              (cons (cons (car i) (if filter
-                                      (funcall filter v attrs)
-                                    v)) l)
+        (let* ((v (plist-get attrs (car i)))
+               (filter (plist-get (cdr i) :from-buffer))
+               (value (if filter
+                          (funcall filter v attrs)
+                        v)))
+          ;; We should only cons if there's a v and the output of the filter is non-nil
+          (if value
+              (cons (cons (car i) value) l)
             l)))
       org-blog-post-mapping
       :initial-value (when content
