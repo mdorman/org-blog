@@ -59,7 +59,9 @@ Each loaded back-end should add its name to the list.")
     (when (listp v)
       (setq v (car v)))
     (set-text-properties 0 (length v) nil v)
-    v))
+    (unless (string-match "^\s*$" v)
+      (message "Found non-whitespace characters")
+      v)))
 
 (defun org-blog-date-format (v i)
   "Properly format a date."
