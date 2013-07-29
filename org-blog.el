@@ -55,6 +55,9 @@ Each loaded back-end should add its name to the list.")
 (defun org-blog-property-strip (v i)
   "Strip properties from a property string."
   (when v
+    ;; If we got a list, only do the head
+    (when (listp v)
+      (setq v (car v)))
     (set-text-properties 0 (length v) nil v)
     v))
 
@@ -73,7 +76,7 @@ Each loaded back-end should add its name to the list.")
                                   (:name :to-buffer "POST_NAME" :from-buffer org-blog-property-strip)
                                   (:parent :to-buffer "POST_PARENT" :from-buffer org-blog-property-strip)
                                   (:status :to-buffer "POST_STATUS" :from-buffer org-blog-property-strip)
-                                  (:title :to-buffer "TITLE" :from-buffer (lambda (v i) (org-blog-property-strip (car v) i)))
+                                  (:title :to-buffer "TITLE" :from-buffer org-blog-property-strip)
                                   (:type :to-buffer "POST_TYPE" :from-buffer org-blog-property-strip)))
 
 (require 'org-blog-buffer)
