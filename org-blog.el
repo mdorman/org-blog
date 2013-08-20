@@ -65,8 +65,9 @@ Each loaded back-end should add its name to the list.")
 
 (defun org-blog-date-format (v i)
   "Properly format a date."
-  (date-to-time
-   (org-export-get-date i "%Y%m%dT%T%z")))
+  (when v
+    (date-to-time
+     (org-export-get-date i "%Y%m%dT%T%z"))))
 
 (defconst org-blog-post-mapping '((:blog :to-buffer "POST_BLOG" :from-buffer org-blog-property-strip)
                                   (:category :to-buffer "POST_CATEGORY" :from-buffer org-blog-property-split)
