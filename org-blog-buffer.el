@@ -53,7 +53,6 @@ TREE is the parse tree being exported.  BACKEND is the export
 back-end used.  INFO is a plist used as a communication channel.
 
 Assume BACKEND is `blog'."
-  ;; (print (format "content is: %s" content))
   ;; <tag>, </tag>, <tag/>, (replace-regexp-in-string "\\(<\\([[:alpha:]]+\\|/[[:alpha:]]+\\|[[:alpha:]]+/\\)>\\)\n+" "\\1" content)
   (replace-regexp-in-string "\s*\\(<[^>]+>\\)\n+" "\\1" content))
 
@@ -65,10 +64,7 @@ TREE is the parse tree being exported.  BACKEND is the export
 back-end used.  INFO is a plist used as a communication channel.
 
 Assume BACKEND is `blog'."
-  ;; (print (format "content is: %s" content))
-  (print (format "parent is %s" (org-export-get-parent content)))
   (cond ((eq 'verse-block (car (org-export-get-parent content)))
-         (print "in verse")
          content)
         (t
          (replace-regexp-in-string "\n" " " content))))
