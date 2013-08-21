@@ -43,7 +43,8 @@
 (org-export-define-derived-backend 'blog 'html
   :filters-alist '((:filter-final-output . org-blog-filter-tag-newline)
                    (:filter-plain-text . org-blog-filter-text-newlines))
-  :options-alist org-blog-buffer-options-alist)
+  :options-alist org-blog-buffer-options-alist
+  :translate-alist '((link . org-blog-translate-link)))
 
 ;;; Filters
 (defun org-blog-filter-tag-newline (content backend info)
@@ -56,7 +57,18 @@ Assume BACKEND is `blog'."
   ;; <tag>, </tag>, <tag/>, (replace-regexp-in-string "\\(<\\([[:alpha:]]+\\|/[[:alpha:]]+\\|[[:alpha:]]+/\\)>\\)\n+" "\\1" content)
   (replace-regexp-in-string "\s*\\(<[^>]+>\\)\n+" "\\1" content))
 
-;;; Filters
+(defun org-blog-translate-link (link content info)
+  "Fixup links"
+  ;; (print (format "link is: %s\ncontent is: %s\ninfo is: %s\n" link content info))
+  (let ((type (org-element-property :type link)))
+    (cond ((member type '("custom-id" "id"))
+           (let ((destination (org-export-resolve-id-link link info)))
+             (format "<a href=\"%s\">%s</a>" destination contents)))
+          ((equal type "fuzzy")
+           ;; This is not ideal
+           (let ((destination (org-element-property :path link)))
+             (format "<a href=\"%s\">%s</a>" destination contents))))))
+
 (defun org-blog-filter-text-newlines (content backend info)
   "Remove superfluous newlines in elements (except verse blocks)
 
@@ -174,10 +186,12 @@ retain
 its line
 breaks
 #+END_VERSE
+
+[[org-blog-buffer.el][There's a link in here, too]]
 ")
             (post-struct '((:blog . "t1b")
                            (:category "t1c1" "t1c2")
-                           (:content . "<p>Just a little bit of content. There is still part of the paragraph.  Line breaks are refolded.</p><p class=\"verse\">Though the material in verse should<br/>retain<br/>its line<br/>breaks<br/></p>")
+                           (:content . "<p>Just a little bit of content. There is still part of the paragraph.  Line breaks are refolded.</p><p class=\"verse\">Though the material in verse should<br/>retain<br/>its line<br/>breaks<br/></p><p><a href=\"org-blog-buffer.el\">There's a link in here, too</a></p>")
                            (:date 20738 4432)
                            (:description . "t1e")
                            (:id . "1")
