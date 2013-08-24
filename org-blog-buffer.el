@@ -99,9 +99,11 @@ retain the maximum flexibility for further transformation."
       (lambda (l i)
         (let* ((v (plist-get attrs (car i)))
                (filter (plist-get (cdr i) :from-buffer))
-               (value (if filter
-                          (funcall filter v attrs)
-                        v)))
+               (value (if (and v
+                               (not (= 0 (length v))))
+                          (if filter
+                              (funcall filter v attrs)
+                            v))))
           ;; We should only cons if there's a v and the output of the filter is non-nil
           (if value
               (cons (cons (car i) value) l)
