@@ -1,3 +1,3 @@
 #!/bin/sh -e
-IFS= read -r -p 'Please enter blog password: ' PASSWORD
-exec emacs -nw -Q -L /usr/share/emacs/site-lisp/org-mode -L . -l ert -l org-blog --eval '(setq xml-rpc-debug 10)' --eval "(setq org-blog-test-password \"${PASSWORD}\")" --eval '(ert t)'
+exec emacs -nw -Q -L /usr/share/emacs/site-lisp/org-mode -L . -l org-blog -l ert --eval "(setq org-blog-test-password \"${PASSWORD}\")" --eval '(setq xml-rpc-debug 10)' --eval '(setq stack-trace-on-error t)' --eval '(ert t)'
+

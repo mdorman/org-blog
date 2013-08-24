@@ -184,14 +184,13 @@ function to make other calls."
                                                      ((equal (length userblogs) 1)
                                                       (setcdr (assq :xmlrpc complete) (cdr (assoc "xmlrpc" (car userblogs))))
                                                       (cdr (assoc "blogid" (car userblogs))))
-                                                     ;; FIXME: Prompt the user from the list of blogs (if there's more than 1
-                                                     ;; Then shove the blog info into complete
+                                                     ;; If there's mroe than one blog, ask the user to choose from them
                                                      (t
                                                       (reduce
-                                                       (lambda (entry)
-                                                         (when (string= (cdr (assoc "blogName" entry)))
-                                                           (setcdr (assq :xmlrpc complete) (cdr (assoc "xmlrpc" userblog)))
-                                                           (cdr (assoc "blogid" userblog))))
+                                                       (lambda (chosen entry)
+                                                         (when (string= (cdr (assoc "blogName" result)) (cdr (assoc "blogName" entry)))
+                                                           (setcdr (assq :xmlrpc complete) (cdr (assoc "xmlrpc" entry)))
+                                                           (cdr (assoc "blogid" entry))))
                                                        userblogs
                                                        :initial-value (completing-read
                                                                        "Blog Name: "
