@@ -34,6 +34,7 @@
   (reduce
    (lambda (l i)
      (let ((field (plist-get (cdr i) :to-buffer)))
+       ;; Only add our fields, distinguised by the POST_ prefix
        (if (string-prefix-p "POST_" field t)
            (cons (list (car i) field nil nil t) l)
          l)))
