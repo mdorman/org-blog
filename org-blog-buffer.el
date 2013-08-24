@@ -156,7 +156,7 @@ update the buffer to reflect the values it contains."
                      (replace-match (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val) t t)
                      (message "Done replacing value"))
                     ;; It was not found
-                    (t
+                    (val
                      (insert (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val "\n"))))))))))
          ;; Reverse sort fields to insert alphabetically
          (sort
