@@ -122,6 +122,7 @@ update the buffer to reflect the values it contains."
     (save-restriction
       ;; Get the current values
       (let ((current (org-blog-buffer-extract-post)))
+        ;; Iterate over the stuff to merge in
         (mapc
          (lambda (item)
            (let ((k (car item))
@@ -140,16 +141,24 @@ update the buffer to reflect the values it contains."
                                 "default")))
                (goto-char (point-min))
                (cond
-                ;; Inserting a new keyword
+                ;; No existing value associated with keyword
                 ((eq (cdr (assq k current)) nil)
                  (when val
                    (insert (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val "\n"))))
-                ;; Updating an existing keyword
+                ;; Existing value associated with keyword does not match new value
                 ((not (equal (cdr (assq k current)) val))
+                 ;; Prepare to search for the keyword
                  (let ((re (org-make-options-regexp (list (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer)) nil))
                        (case-fold-search t))
-                   (re-search-forward re nil t)
-                   (replace-match (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val) t t)))))))
+                   (cond
+                    ;; If it was found
+                    ((re-search-forward re nil t)
+                     (message "Updating existing value with %s" val)
+                     (replace-match (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val) t t)
+                     (message "Done replacing value"))
+                    ;; It was not found
+                    (t
+                     (insert (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val "\n"))))))))))
          ;; Reverse sort fields to insert alphabetically
          (sort
           (copy-alist merge)
