@@ -66,7 +66,6 @@ Assume BACKEND is `blog'."
 
 (defun org-blog-translate-link (link content info)
   "Fixup links"
-  ;; (print (format "link is: %s\ncontent is: %s\ninfo is: %s\n" link content info))
   (let ((type (org-element-property :type link)))
     (cond ((member type '("custom-id" "id"))
            (let ((destination (org-export-resolve-id-link link info)))
