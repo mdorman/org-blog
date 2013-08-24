@@ -40,12 +40,6 @@
    org-blog-post-mapping
    :initial-value nil))
 
-(org-export-define-derived-backend 'blog 'html
-  :filters-alist '((:filter-final-output . org-blog-filter-tag-newline)
-                   (:filter-plain-text . org-blog-filter-text-newlines))
-  :options-alist org-blog-buffer-options-alist
-  :translate-alist '((link . org-blog-translate-link)))
-
 ;;; Filters
 (defun org-blog-filter-tag-newline (content backend info)
   "Remove superfluous leading space and trailing newlines from tags
@@ -80,6 +74,12 @@ Assume BACKEND is `blog'."
          content)
         (t
          (replace-regexp-in-string "\n" " " content))))
+
+(org-export-define-derived-backend 'blog 'html
+  :filters-alist '((:filter-final-output . org-blog-filter-tag-newline)
+                   (:filter-plain-text . org-blog-filter-text-newlines))
+  :options-alist org-blog-buffer-options-alist
+  :translate-alist '((link . org-blog-translate-link)))
 
 (defun org-blog-buffer-extract-post ()
   "Transform a buffer into a post.
