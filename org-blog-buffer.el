@@ -23,9 +23,9 @@
 (provide 'org-blog-buffer)
 
 (require 'org)
+(require 'org-blog)
 (require 'ox)
 (require 'ox-html)
-(require 'org-blog)
 
 (eval-when-compile
   (require 'cl))
