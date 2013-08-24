@@ -23,9 +23,9 @@
 (provide 'org-blog-buffer)
 
 (require 'org)
+(require 'org-blog)
 (require 'ox)
 (require 'ox-html)
-(require 'org-blog)
 
 (eval-when-compile
   (require 'cl))
@@ -33,17 +33,13 @@
 (defconst org-blog-buffer-options-alist
   (reduce
    (lambda (l i)
-     (let ((field (plist-get (cdr i) :attr)))
+     (let ((field (plist-get (cdr i) :to-buffer)))
+       ;; Only add our fields, distinguised by the POST_ prefix
        (if (string-prefix-p "POST_" field t)
            (cons (list (car i) field nil nil t) l)
          l)))
    org-blog-post-mapping
    :initial-value nil))
-
-(org-export-define-derived-backend 'blog 'html
-  :filters-alist '((:filter-final-output . org-blog-filter-tag-newline)
-                   (:filter-plain-text . org-blog-filter-text-newlines))
-  :options-alist org-blog-buffer-options-alist)
 
 ;;; Filters
 (defun org-blog-filter-tag-newline (content backend info)
@@ -53,11 +49,9 @@ TREE is the parse tree being exported.  BACKEND is the export
 back-end used.  INFO is a plist used as a communication channel.
 
 Assume BACKEND is `blog'."
-  ;; (print (format "content is: %s" content))
   ;; <tag>, </tag>, <tag/>, (replace-regexp-in-string "\\(<\\([[:alpha:]]+\\|/[[:alpha:]]+\\|[[:alpha:]]+/\\)>\\)\n+" "\\1" content)
   (replace-regexp-in-string "\s*\\(<[^>]+>\\)\n+" "\\1" content))
 
-;;; Filters
 (defun org-blog-filter-text-newlines (content backend info)
   "Remove superfluous newlines in elements (except verse blocks)
 
@@ -65,13 +59,27 @@ TREE is the parse tree being exported.  BACKEND is the export
 back-end used.  INFO is a plist used as a communication channel.
 
 Assume BACKEND is `blog'."
-  ;; (print (format "content is: %s" content))
-  (print (format "parent is %s" (org-export-get-parent content)))
   (cond ((eq 'verse-block (car (org-export-get-parent content)))
-         (print "in verse")
          content)
         (t
          (replace-regexp-in-string "\n" " " content))))
+
+(defun org-blog-translate-link (link content info)
+  "Fixup links"
+  (let ((type (org-element-property :type link)))
+    (cond ((member type '("custom-id" "id"))
+           (let ((destination (org-export-resolve-id-link link info)))
+             (format "<a href=\"%s\">%s</a>" destination contents)))
+          ((equal type "fuzzy")
+           ;; This is not ideal
+           (let ((destination (org-element-property :path link)))
+             (format "<a href=\"%s\">%s</a>" destination contents))))))
+
+(org-export-define-derived-backend 'blog 'html
+  :filters-alist '((:filter-final-output . org-blog-filter-tag-newline)
+                   (:filter-plain-text . org-blog-filter-text-newlines))
+  :options-alist org-blog-buffer-options-alist
+  :translate-alist '((link . org-blog-translate-link)))
 
 (defun org-blog-buffer-extract-post ()
   "Transform a buffer into a post.
@@ -89,12 +97,16 @@ retain the maximum flexibility for further transformation."
     (sort
      (reduce
       (lambda (l i)
-        (let ((v (plist-get attrs (car i)))
-              (filter (plist-get (cdr i) :from-buffer)))
-          (if v
-              (cons (cons (car i) (if filter
-                                      (funcall filter v attrs)
-                                    v)) l)
+        (let* ((v (plist-get attrs (car i)))
+               (filter (plist-get (cdr i) :from-buffer))
+               (value (if (and v
+                               (not (= 0 (length v))))
+                          (if filter
+                              (funcall filter v attrs)
+                            v))))
+          ;; We should only cons if there's a v and the output of the filter is non-nil
+          (if value
+              (cons (cons (car i) value) l)
             l)))
       org-blog-post-mapping
       :initial-value (when content
@@ -111,6 +123,7 @@ update the buffer to reflect the values it contains."
     (save-restriction
       ;; Get the current values
       (let ((current (org-blog-buffer-extract-post)))
+        ;; Iterate over the stuff to merge in
         (mapc
          (lambda (item)
            (let ((k (car item))
@@ -129,16 +142,24 @@ update the buffer to reflect the values it contains."
                                 "default")))
                (goto-char (point-min))
                (cond
-                ;; Inserting a new keyword
+                ;; No existing value associated with keyword
                 ((eq (cdr (assq k current)) nil)
                  (when val
-                   (insert (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :attr) ": " val "\n"))))
-                ;; Updating an existing keyword
+                   (insert (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val "\n"))))
+                ;; Existing value associated with keyword does not match new value
                 ((not (equal (cdr (assq k current)) val))
-                 (let ((re (org-make-options-regexp (list (plist-get (cdr (assq k org-blog-post-mapping)) :attr)) nil))
+                 ;; Prepare to search for the keyword
+                 (let ((re (org-make-options-regexp (list (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer)) nil))
                        (case-fold-search t))
-                   (re-search-forward re nil t)
-                   (replace-match (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :attr) ": " val) t t)))))))
+                   (cond
+                    ;; If it was found
+                    ((re-search-forward re nil t)
+                     (message "Updating existing value with %s" val)
+                     (replace-match (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val) t t)
+                     (message "Done replacing value"))
+                    ;; It was not found
+                    (val
+                     (insert (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val "\n"))))))))))
          ;; Reverse sort fields to insert alphabetically
          (sort
           (copy-alist merge)
@@ -176,10 +197,12 @@ retain
 its line
 breaks
 #+END_VERSE
+
+[[org-blog-buffer.el][There's a link in here, too]]
 ")
             (post-struct '((:blog . "t1b")
                            (:category "t1c1" "t1c2")
-                           (:content . "<p>Just a little bit of content. There is still part of the paragraph.  Line breaks are refolded.</p><p class=\"verse\">Though the material in verse should<br/>retain<br/>its line<br/>breaks<br/></p>")
+                           (:content . "<p>Just a little bit of content. There is still part of the paragraph.  Line breaks are refolded.</p><p class=\"verse\">Though the material in verse should<br/>retain<br/>its line<br/>breaks<br/></p><p><a href=\"org-blog-buffer.el\">There's a link in here, too</a></p>")
                            (:date 20738 4432)
                            (:description . "t1e")
                            (:id . "1")

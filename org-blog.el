@@ -55,26 +55,48 @@ Each loaded back-end should add its name to the list.")
 (defun org-blog-property-strip (v i)
   "Strip properties from a property string."
   (when v
-    (set-text-properties 0 (length v) nil v)
-    v))
+    ;; If we got a list, only do the head
+    (when (listp v)
+      (message "Saw list value for %s" v)
+      (setq v (car v)))
+    ;; (message "Setting text properties on %s" v)
+    (let ((clean (substring-no-properties v)))
+      ;; (message "Doing string match on %s" v)
+      (unless (string-match "^\s*$" clean)
+        ;; (message "Found non-whitespace characters")
+        clean))))
 
 (defun org-blog-date-format (v i)
   "Properly format a date."
-  (date-to-time
-   (org-export-get-date i "%Y%m%dT%T%z")))
+  (when v
+    (date-to-time
+     (org-export-get-date i "%Y%m%dT%T%z"))))
 
-(defconst org-blog-post-mapping '((:blog :attr "POST_BLOG" :from-buffer org-blog-property-strip)
-                                  (:category :attr "POST_CATEGORY" :from-buffer org-blog-property-split)
-                                  (:date :attr "DATE" :from-buffer org-blog-date-format)
-                                  (:description :attr "DESCRIPTION" :from-buffer org-blog-property-strip)
-                                  (:id :attr "POST_ID" :from-buffer org-blog-property-strip)
-                                  (:keywords :attr "KEYWORDS" :from-buffer org-blog-property-split)
-                                  (:link :attr "POST_LINK" :from-buffer org-blog-property-strip)
-                                  (:name :attr "POST_NAME" :from-buffer org-blog-property-strip)
-                                  (:parent :attr "POST_PARENT" :from-buffer org-blog-property-strip)
-                                  (:status :attr "POST_STATUS" :from-buffer org-blog-property-strip)
-                                  (:title :attr "TITLE" :from-buffer (lambda (v i) (org-blog-property-strip (car v) i)))
-                                  (:type :attr "POST_TYPE" :from-buffer org-blog-property-strip)))
+(defun org-blog-title-format (value info)
+  "Properly format a title."
+  (let ((default (or (let ((visited-file (buffer-file-name (buffer-base-buffer))))
+		   (and visited-file
+			(file-name-sans-extension
+			 (file-name-nondirectory visited-file))))
+		 (buffer-name (buffer-base-buffer))))
+        (val (org-element-interpret-data (plist-get info :title) info)))
+    (cond ((equal default val)
+           nil)
+          (t
+           val))))
+
+(defconst org-blog-post-mapping '((:blog :to-buffer "POST_BLOG" :from-buffer org-blog-property-strip)
+                                  (:category :to-buffer "POST_CATEGORY" :from-buffer org-blog-property-split)
+                                  (:date :to-buffer "DATE" :from-buffer org-blog-date-format)
+                                  (:description :to-buffer "DESCRIPTION" :from-buffer org-blog-property-strip)
+                                  (:id :to-buffer "POST_ID" :from-buffer org-blog-property-strip)
+                                  (:keywords :to-buffer "KEYWORDS" :from-buffer org-blog-property-split)
+                                  (:link :to-buffer "POST_LINK" :from-buffer org-blog-property-strip)
+                                  (:name :to-buffer "POST_NAME" :from-buffer org-blog-property-strip)
+                                  (:parent :to-buffer "POST_PARENT" :from-buffer org-blog-property-strip)
+                                  (:status :to-buffer "POST_STATUS" :from-buffer org-blog-property-strip)
+                                  (:title :to-buffer "TITLE" :from-buffer org-blog-title-format)
+                                  (:type :to-buffer "POST_TYPE" :from-buffer org-blog-property-strip)))
 
 (require 'org-blog-buffer)
 (require 'org-blog-wp)
