@@ -57,11 +57,14 @@ Each loaded back-end should add its name to the list.")
   (when v
     ;; If we got a list, only do the head
     (when (listp v)
+      (message "Saw list value for %s" v)
       (setq v (car v)))
-    (set-text-properties 0 (length v) nil v)
-    (unless (string-match "^\s*$" v)
-      (message "Found non-whitespace characters")
-      v)))
+    ;; (message "Setting text properties on %s" v)
+    (let ((clean (substring-no-properties v)))
+      ;; (message "Doing string match on %s" v)
+      (unless (string-match "^\s*$" clean)
+        ;; (message "Found non-whitespace characters")
+        clean))))
 
 (defun org-blog-date-format (v i)
   "Properly format a date."
