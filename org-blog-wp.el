@@ -22,6 +22,7 @@
 
 (provide 'org-blog-wp)
 
+(require 'org)
 (require 'org-blog)
 (require 'xml-rpc)
 
@@ -57,7 +58,7 @@ structure to differentiate them.
 For convenience in testing and inspection, the resulting alist is
 sorted."
   (sort
-   (reduce
+   (org-reduce
     (lambda (wp new)
       (let ((k (car new))
             (v (cdr new)))
@@ -75,7 +76,8 @@ sorted."
                (cons (cons "post_title" (or v "No Title")) wp))
               ((assq k org-blog-wp-alist)
                (cons (cons (cdr (assq k org-blog-wp-alist)) v) wp)))))
-    post :initial-value nil)
+    post
+    :initial-value nil)
    (lambda (a b)
      (string< (car a) (car b)))))
 
@@ -105,7 +107,7 @@ properly.
 For convenience in testing and inspection, the resulting alist is
 sorted."
   (sort
-   (reduce
+   (org-reduce
     (lambda (post new)
       "Do key and value transformations."
       (let ((k (car new))
@@ -120,7 +122,8 @@ sorted."
                (cons (cons (car (rassoc k org-blog-wp-alist)) v) post))
               (t
                post))))
-    wp :initial-value nil)
+    wp
+    :initial-value nil)
    (lambda (a b)
      (string< (car a) (car b)))))
 
@@ -141,12 +144,13 @@ glomming them onto the existing post."
   "Handle turning WordPress taxonomy lists into an alist.
 
 From here we can extract just the bits we need."
-  (reduce
+  (org-reduce
    (lambda (lists term)
      (let ((name (cdr (assoc "name" term)))
            (taxonomy (cdr (assoc "taxonomy" term))))
        (cons (append (list taxonomy) (cdr (assoc taxonomy lists)) (list name)) lists)))
-   terms :initial-value nil))
+   terms
+   :initial-value nil))
 
 (defun org-blog-wp-params (blog)
   "Construct the basic paramlist for wordpress calls.
@@ -186,7 +190,7 @@ function to make other calls."
                                                       (cdr (assoc "blogid" (car userblogs))))
                                                      ;; If there's mroe than one blog, ask the user to choose from them
                                                      (t
-                                                      (reduce
+                                                      (org-reduce
                                                        (lambda (chosen entry)
                                                          (when (string= (cdr (assoc "blogName" result)) (cdr (assoc "blogName" entry)))
                                                            (setcdr (assq :xmlrpc complete) (cdr (assoc "xmlrpc" entry)))

@@ -31,7 +31,7 @@
   (require 'cl))
 
 (defconst org-blog-buffer-options-alist
-  (reduce
+  (org-reduce
    (lambda (l i)
      (let ((field (plist-get (cdr i) :to-buffer)))
        ;; Only add our fields, distinguised by the POST_ prefix
@@ -95,7 +95,7 @@ retain the maximum flexibility for further transformation."
         (attrs
          (org-export-get-environment 'blog)))
     (sort
-     (reduce
+     (org-reduce
       (lambda (l i)
         (let* ((v (plist-get attrs (car i)))
                (filter (plist-get (cdr i) :from-buffer))
