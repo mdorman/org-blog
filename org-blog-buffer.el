@@ -170,13 +170,16 @@ update the buffer to reflect the values it contains."
 (when (featurep 'ert)
   (ert-deftest ob-test-extract-from-empty ()
     "Try extracting a post from an empty buffer."
-    (with-temp-buffer
-      (should (equal (org-blog-buffer-extract-post) nil))))
+    (should
+     (equal (with-temp-buffer
+              (org-blog-buffer-extract-post))
+            nil)))
 
   (ert-deftest ob-test-extract-from-buffer ()
     "Try extracting a post from a buffer with stuff set."
-    (with-temp-buffer
-      (let ((post-string "\
+    (should
+     (equal (with-temp-buffer
+              (insert "\
 #+POST_BLOG: t1b
 #+POST_CATEGORY: t1c1, t1c2
 #+DATE: [2013-01-25 Fri 00:00]
@@ -198,46 +201,58 @@ its line
 breaks
 #+END_VERSE
 
-[[org-blog-buffer.el][There's a link in here, too]]
-")
-            (post-struct '((:blog . "t1b")
-                           (:category "t1c1" "t1c2")
-                           (:content . "<p>Just a little bit of content. There is still part of the paragraph.  Line breaks are refolded.</p><p class=\"verse\">Though the material in verse should<br/>retain<br/>its line<br/>breaks<br/></p><p><a href=\"org-blog-buffer.el\">There's a link in here, too</a></p>")
-                           (:date 20738 4432)
-                           (:description . "t1e")
-                           (:id . "1")
-                           (:keywords "t1k1" "t1k2" "t1k3")
-                           (:link . "http://example.com/")
-                           (:name . "t1n")
-                           (:title . "Test 1 Title")
-                           (:type . "post"))))
-        (insert post-string)
-        (should (equal (org-blog-buffer-extract-post) post-struct)))))
+ [[org-blog-buffer.el][There's a link in here, too]]")
+              (org-blog-buffer-extract-post))
+            '((:blog . "t1b")
+              (:category "t1c1" "t1c2")
+              (:content . "<p>Just a little bit of content. There is still part of the paragraph.  Line breaks are refolded.</p><p class=\"verse\">Though the material in verse should<br  />retain<br  />its line<br  />breaks<br  /></p><p><a href=\"org-blog-buffer.el\">There's a link in here, too</a></p>")
+              (:date 20738 4432)
+              (:description . "t1e")
+              (:id . "1")
+              (:keywords "t1k1" "t1k2" "t1k3")
+              (:link . "http://example.com/")
+              (:name . "t1n")
+              (:title . "Test 1 Title")
+              (:type . "post")))))
 
   (ert-deftest ob-test-merge-from-empty ()
     "Try merging an empty post into an empty buffer."
-    (with-temp-buffer
-      (let ((post-string "")
-            (post-struct '((:blog)
-                           (:category)
-                           (:content)
-                           (:date)
-                           (:description)
-                           (:id)
-                           (:keywords)
-                           (:link)
-                           (:name)
-                           (:parent)
-                           (:status)
-                           (:title)
-                           (:type))))
-        (org-blog-buffer-merge-post post-struct)
-        (should (equal (buffer-string) post-string)))))
+    (should
+     (equal (with-temp-buffer
+              (org-blog-buffer-merge-post  '((:blog)
+                                             (:category)
+                                             (:content)
+                                             (:date)
+                                             (:description)
+                                             (:id)
+                                             (:keywords)
+                                             (:link)
+                                             (:name)
+                                             (:parent)
+                                             (:status)
+                                             (:title)
+                                             (:type)))
+              (buffer-string))
+            "")))
 
   (ert-deftest ob-test-merge-from-full ()
     "Try merging a full post into an empty buffer."
-    (with-temp-buffer
-      (let ((post-string "\
+    (should
+     (equal (with-temp-buffer
+              (org-blog-buffer-merge-post '((:blog . "t1b")
+                                            (:category "t1c1" "t1c2")
+                                            (:date 20738 4432)
+                                            (:description . "t1e")
+                                            (:id . "1")
+                                            (:keywords "t1k1" "t1k2" "t1k3")
+                                            (:link . "http://example.com/")
+                                            (:name . "t1n")
+                                            (:parent . "0")
+                                            (:status . "publish")
+                                            (:title . "Test 1 Title")
+                                            (:type . "post")))
+              (buffer-string))
+            "\
 #+POST_BLOG: t1b
 #+POST_CATEGORY: t1c1, t1c2
 #+DATE: [2013-01-25 Fri 00:00]
@@ -250,21 +265,7 @@ breaks
 #+POST_STATUS: publish
 #+TITLE: Test 1 Title
 #+POST_TYPE: post
-")
-            (post-struct '((:blog . "t1b")
-                           (:category "t1c1" "t1c2")
-                           (:date 20738 4432)
-                           (:description . "t1e")
-                           (:id . "1")
-                           (:keywords "t1k1" "t1k2" "t1k3")
-                           (:link . "http://example.com/")
-                           (:name . "t1n")
-                           (:parent . "0")
-                           (:status . "publish")
-                           (:title . "Test 1 Title")
-                           (:type . "post"))))
-        (org-blog-buffer-merge-post post-struct)
-        (should (equal (buffer-string) post-string)))))
+")))
 
   (ert-deftest ob-test-merge-round-trip ()
     "Try merging a full post into a full buffer, and make sure
