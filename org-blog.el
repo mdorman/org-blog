@@ -22,6 +22,7 @@
 
 (provide 'org-blog)
 
+;;;### autoload
 (define-minor-mode org-blog-mode
   "Toggle org-blog mode.
 
@@ -101,6 +102,7 @@ Each loaded back-end should add its name to the list.")
 (require 'org-blog-buffer)
 (require 'org-blog-wp)
 
+;;;### autoload
 (defun org-blog-new ()
   "Create a new buffer primed for a blog entry.
 
