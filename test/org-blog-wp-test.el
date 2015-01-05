@@ -27,6 +27,7 @@
                            ("category" "t1c1" "t1c2")
                            ("post_tag" "t1k1" "t1k2" "t1k3")))))
     (should (equal (org-blog-post-to-wp post1-struct) post1-wp-input))))
+
 (ert-deftest ob-test-wp-to-post ()
   "Transform from a WP response to a post"
   (let ((post1-struct '((:blog . "t1b")
