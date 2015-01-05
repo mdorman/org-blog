@@ -1,3 +1,0 @@
-#!/bin/sh -e
-exec emacs -nw -Q -L /usr/share/emacs/site-lisp/org-mode -L . -l org-blog -l ert --eval "(setq org-blog-test-password \"${PASSWORD}\")" --eval '(setq xml-rpc-debug 10)' --eval '(setq stack-trace-on-error t)' --eval '(ert t)'
-
