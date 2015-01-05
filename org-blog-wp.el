@@ -383,7 +383,7 @@ call the specified function and return the results."
 
   (ert-deftest ob-test-wp-params ()
     "Test getting the blog-id (and correct xmlrpc URL) via xmlrpc"
-    (let ((initial-blog-param `((:xmlrpc . "http://wordpress.com/xmlrpc.php")
+    (let ((initial-blog-param `((:xmlrpc . "https://wordpress.com/xmlrpc.php")
                                 (:username . "mdorman@ironicdesign.com")
                                 (:password . ,org-blog-test-password)))
           (final-blog-param `((:blog-id . "46183217")

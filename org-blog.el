@@ -291,7 +291,7 @@ available in org-blog-alist."
   (ert-deftest ob-test-org-blog-post-to-blog ()
     "Test getting the blog information from a blog post"
     (let ((org-blog-alist `(("bar" . ((:engine . "wp")
-                                      (:xmlrpc . "http://wordpress.com/xmlrpc.php")
+                                      (:xmlrpc . "https://wordpress.com/xmlrpc.php")
                                       (:username . "mdorman@ironicdesign.com")
                                       (:password . ,org-blog-test-password)))))
           (final-blog-param `((:blog-id . "46183217")
