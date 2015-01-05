@@ -1,13 +1,17 @@
 ;;; org-blog.el --- Manage a blog using org-mode
 ;;; -*- lexical-binding: t -*-
-;;
+
 ;; Copyright (C) 2013 Michael Alan Dorman
-;;
+
 ;; Author: Michael Alan Dorman <mdorman at ironicdesign dot com>
-;; Keywords: blog, org-mode
-;;
-;; This file is part of org-blog.
-;;
+;; Created: Feb 5 2013
+;; Homepage: https://github.com/mdorman/org-blog
+;; Keywords: blog, org, org-mode
+;; Package-Requires: ((org "8.0") (xml-rpc "1.6.9"))
+;; Version: 0.14
+
+;; This file is not part of GNU Emacs.
+
 ;; org-blog is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +24,14 @@
 ;;
 ;; GNU General Public License at <http://www.gnu.org/licenses/>.
 
-(provide 'org-blog)
+;;; Commentary:
+
+;; The purpose of org-blog is to allow you to use org-mode markup to
+;; create content for one or more blogs, keep local copies of
+;; articles, synchronize local and remote copies as much as is
+;; sensible, and do it all from within emacs with a minimum of fuss.
+
+;;; Code:
 
 ;;;### autoload
 (define-minor-mode org-blog-mode
@@ -347,3 +358,6 @@ breaks
           (let ((pre-save (buffer-string)))
             (org-blog-save)
             (should (equal pre-save (buffer-string)))))))))
+
+(provide 'org-blog)
+;;; org-blog.el ends here
