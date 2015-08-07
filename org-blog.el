@@ -1,7 +1,7 @@
 ;;; org-blog.el --- Manage a blog using org-mode
 ;;; -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013 Michael Alan Dorman
+;; Copyright (C) 2013-2015 Michael Alan Dorman
 
 ;; Author: Michael Alan Dorman <mdorman at ironicdesign dot com>
 ;; Created: Feb 5 2013
