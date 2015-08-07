@@ -33,6 +33,8 @@
 
 ;;; Code:
 
+(require 'org)
+
 ;;;### autoload
 (define-minor-mode org-blog-mode
   "Toggle org-blog mode.
