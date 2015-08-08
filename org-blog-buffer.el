@@ -170,3 +170,6 @@ update the buffer to reflect the values it contains."
           (copy-alist merge)
           (lambda (a b)
             (string< (car b) (car a)))))))))
+
+(provide 'org-blog-buffer)
+;;; org-blog-buffer.el ends here
