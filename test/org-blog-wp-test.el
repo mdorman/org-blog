@@ -15,7 +15,7 @@
                         (:type . "post")))
         (post1-wp-input '(("link" . "http://example.com/")
                           ("post_content" . "<p>\nTest 1 Content</p>\n")
-                          ("post_date_gmt" :datetime (20738 22432 0 0))
+                          ("post_date_gmt" :datetime (20738 18832 0 0))
                           ("post_excerpt" . "t1e")
                           ("post_id" . "1")
                           ("post_name" . "t1n")
