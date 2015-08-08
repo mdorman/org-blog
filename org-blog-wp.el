@@ -20,6 +20,8 @@
 
 ;; GNU General Public License at <http://www.gnu.org/licenses/>.
 
+;;; Code:
+
 (provide 'org-blog-wp)
 
 (require 'org)
@@ -257,3 +259,6 @@ call the specified function and return the results."
                        post-id
                        (org-blog-post-to-wp post))
   post-id)
+
+(provide 'org-blog-wp)
+;;; org-blog-wp.el ends here
