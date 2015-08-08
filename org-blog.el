@@ -52,6 +52,10 @@ Commands:
   :keymap '(([?\C-c ?\C-b ?p] . org-blog-save))
   :lighter " org-blog")
 
+(defgroup org-blog ()
+  "org-blog minor mode"
+  :group 'org)
+
 (defcustom org-blog-alist nil
   "An alist for specifying blog information.
 
