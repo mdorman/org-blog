@@ -7,8 +7,8 @@
 ;; Created: Feb 5 2013
 ;; Homepage: https://github.com/mdorman/org-blog
 ;; Keywords: blog, org, org-mode
-;; Package-Requires: ((org "8.2.10") (xml-rpc "1.6.9"))
-;; Version: 0.14
+;; Package-Requires: ((org "8.3") (xml-rpc "1.6.12"))
+;; Version: 0.15
 
 ;; This file is not part of GNU Emacs.
 
