@@ -34,6 +34,8 @@
 ;;; Code:
 
 (require 'org)
+(require 'org-blog-buffer)
+(require 'org-blog-wp)
 
 ;;;### autoload
 (define-minor-mode org-blog-mode
