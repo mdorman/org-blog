@@ -62,12 +62,18 @@ them.")
 Each loaded back-end should add its name to the list.")
 
 (defun org-blog-property-split (v i)
-  "Get a property split on commas."
+  "Split a property V on commas.
+
+We only have the argument I because the calling convention needs
+to accomodate `org-blog-date-format'"
   (when v
     (split-string (org-blog-property-strip v i) "\\( *, *\\)" t)))
 
 (defun org-blog-property-strip (v i)
-  "Strip properties from a property string."
+  "Strip properties from a property string V.
+
+We only have the argument I because the calling convention needs
+to accomodate `org-blog-date-format'"
   (when v
     ;; If we got a list, only do the head
     (when (listp v)
@@ -81,13 +87,16 @@ Each loaded back-end should add its name to the list.")
         clean))))
 
 (defun org-blog-date-format (v i)
-  "Properly format a date."
+  "Properly format the document date extracted from I.
+
+We only have the argument V because the calling convention needs
+to accomodate `org-blog-property-split'
+`org-blog-property-strip'"
   (when v
     (date-to-time
      (org-export-get-date i "%Y%m%dT%T%z"))))
 
 (defun org-blog-title-format (value info)
-  "Properly format a title."
   (let ((default (or (let ((visited-file (buffer-file-name (buffer-base-buffer))))
 		   (and visited-file
 			(file-name-sans-extension
@@ -95,6 +104,7 @@ Each loaded back-end should add its name to the list.")
 		 (buffer-name (buffer-base-buffer))))
         (val (org-element-interpret-data (plist-get info :title) info)))
     (cond ((equal default val)
+  "Properly format a title VALUE, using export options INFO."
            nil)
           (t
            val))))
@@ -183,7 +193,7 @@ that mirrors the permalink structure for the blog in question."
     (error (apply 'message (cdr failure)))))
 
 (defun org-blog-call (blog call &rest args)
-  "Make the specified call to the appropriate blog engine.
+  "Make the specified CALL to the appropriate BLOG engine.
 
 This allows us to maintain multiple engines, with a set of
 operations common to all, and call the appropriate function based
@@ -194,7 +204,7 @@ on the engine specification in the entry in `org-blog-alist'."
       (error (format  "Can't find function %s" entry)))))
 
 (defun org-blog-post-to-blog (post)
-  "Determine the blog to use for the given post.
+  "Determine the blog to use for the given POST.
 
 It will ask for the blog name and blog engine if necessary, and
 then hand off to the particular engine's `-params' function, so
@@ -209,7 +219,7 @@ it may make a number of interactive queries to the user."
     (apply func blog nil)))
 
 (defun org-blog-blog-to-engine (blog)
-  "Get the blog engine name from the blog structure.
+  "Get the blog engine name from the BLOG structure.
 
 If it's not present, ask the user to choose from among those
 available in org-blog-alist."
