@@ -30,6 +30,10 @@
 (eval-when-compile
   (require 'cl))
 
+;; Construct the data structure to be handed to
+;; org-export-define-derived-backend by folding over our
+;; `org-blog-post-mapping' structure.
+
 (defconst org-blog-buffer-options-alist
   (org-reduce
    (lambda (l i)
@@ -119,6 +123,7 @@ retain the maximum flexibility for further transformation."
 
 Given a post structure (presumably returned from the server),
 update the buffer to reflect the values it contains."
+  ;; We should rewrite this to work through the parser interface
   (save-excursion
     (save-restriction
       ;; Get the current values
