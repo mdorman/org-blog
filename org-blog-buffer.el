@@ -159,9 +159,7 @@ update the buffer to reflect the values it contains."
                    (cond
                     ;; If it was found
                     ((re-search-forward re nil t)
-                     (message "Updating existing value with %s" val)
-                     (replace-match (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val) t t)
-                     (message "Done replacing value"))
+                     (replace-match (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val) t t))
                     ;; It was not found
                     (val
                      (insert (concat "#+" (plist-get (cdr (assq k org-blog-post-mapping)) :to-buffer) ": " val "\n"))))))))))

@@ -83,7 +83,6 @@ to accomodate `org-blog-date-format'"
   (when v
     ;; If we got a list, only do the head
     (when (listp v)
-      (message "Saw list value for %s" v)
       (setq v (car v)))
     ;; (message "Setting text properties on %s" v)
     (let ((clean (substring-no-properties v)))
