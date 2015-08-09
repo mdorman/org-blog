@@ -102,19 +102,6 @@ to accomodate `org-blog-property-split'
     (date-to-time
      (org-export-get-date i "%Y%m%dT%T%z"))))
 
-(defun org-blog-title-format (value info)
-  (let ((default (or (let ((visited-file (buffer-file-name (buffer-base-buffer))))
-		   (and visited-file
-			(file-name-sans-extension
-			 (file-name-nondirectory visited-file))))
-		 (buffer-name (buffer-base-buffer))))
-        (val (org-element-interpret-data (plist-get info :title) info)))
-    (cond ((equal default val)
-  "Properly format a title VALUE, using export options INFO."
-           nil)
-          (t
-           val))))
-
 (defconst org-blog-post-mapping '((:blog :to-buffer "POST_BLOG" :from-buffer org-blog-property-strip)
                                   (:category :to-buffer "POST_CATEGORY" :from-buffer org-blog-property-split)
                                   (:date :to-buffer "DATE" :from-buffer org-blog-date-format)
@@ -125,7 +112,7 @@ to accomodate `org-blog-property-split'
                                   (:name :to-buffer "POST_NAME" :from-buffer org-blog-property-strip)
                                   (:parent :to-buffer "POST_PARENT" :from-buffer org-blog-property-strip)
                                   (:status :to-buffer "POST_STATUS" :from-buffer org-blog-property-strip)
-                                  (:title :to-buffer "TITLE" :from-buffer org-blog-title-format)
+                                  (:title :to-buffer "TITLE" :from-buffer org-blog-property-strip)
                                   (:type :to-buffer "POST_TYPE" :from-buffer org-blog-property-strip)))
 
 (require 'org-blog-buffer)
