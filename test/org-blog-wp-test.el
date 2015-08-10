@@ -122,6 +122,8 @@
 
 (ert-deftest ob-test-wp-params ()
   "Test getting the blog-id (and correct xmlrpc URL) via xmlrpc"
+  (unless (boundp 'org-blog-test-password)
+    (ert-skip "No password set"))
   (let ((initial-blog-param `((:xmlrpc . "https://wordpress.com/xmlrpc.php")
                               (:username . "mdorman@ironicdesign.com")
                               (:password . ,org-blog-test-password)))

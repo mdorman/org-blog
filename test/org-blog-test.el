@@ -74,6 +74,8 @@
       (should (string= (org-no-properties (buffer-string)) post-string)))))
 (ert-deftest ob-test-org-blog-post-to-blog ()
   "Test getting the blog information from a blog post"
+  (unless (boundp 'org-blog-test-password)
+    (ert-skip "No password set"))
   (let ((org-blog-alist `(("bar" . ((:engine . "wp")
                                     (:xmlrpc . "https://wordpress.com/xmlrpc.php")
                                     (:username . "mdorman@ironicdesign.com")
@@ -87,8 +89,9 @@
     (should (equal (org-blog-post-to-blog (org-blog-buffer-extract-post)) final-blog-param))))
 (ert-deftest ob-test-org-blog-save ()
   "Transfer from buffers to posts and back again"
-  (let* ((debug-on-error 1)
-         (blog (org-blog-wp-params `((:blog-id . 46183217)
+  (unless (boundp 'org-blog-test-password)
+    (ert-skip "No password set"))
+  (let* ((blog (org-blog-wp-params `((:blog-id . 46183217)
                                      (:directory . "~/org/blogging")
                                      (:engine . "wp")
                                      (:password . ,org-blog-test-password)
