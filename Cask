@@ -6,8 +6,6 @@
 (depends-on "org-plus-contrib")
 
 (development
+ (depends-on "buttercup")
  (depends-on "dash")
- (depends-on "el-mock")
- (depends-on "ert-runner")
- (depends-on "f")
  (depends-on "org-plus-contrib"))
