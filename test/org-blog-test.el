@@ -1,108 +1,126 @@
-(require 'el-mock)
+(require 'dash)
 
-(setq message-log-max t
-      test-time (current-time))
-(ert-deftest ob-test-enable-org-blog-mode ()
-  "Test turning on the org-blog minor mode"
-  (with-temp-buffer
-    (org-blog-mode)
-    (should (eq org-blog-mode t))))
-(ert-deftest ob-test-get-name-from-blog ()
-  "Test getting the blog name from a blog spec"
-  (should (string= (org-blog-get-name '((:blog . "foo"))) "foo")))
-(ert-deftest ob-test-get-name-from-alist ()
-  "Test getting the blog name from the alist"
-  (let ((org-blog-alist '(("bar"))))
-    (should (string= (org-blog-get-name) "bar"))))
-(ert-deftest ob-test-get-name-from-completing-read ()
-  "Test getting the blog name from completing-read"
-  (with-mock
-    (stub completing-read => "baz")
-    (should (string= (org-blog-get-name) "baz"))))
-(ert-deftest ob-test-get-name-from-default ()
-  "Test getting the blog name from default"
-  (with-mock
-    (stub completing-read => "")
-    (should (string= (org-blog-get-name) "unknown"))))
-(ert-deftest ob-test-org-blog-new-from-alist ()
-  "Test creating a new blog post with an alist"
-  (let ((org-blog-alist '(("bar")))
-        (post-string (concat "\
+(add-to-list 'load-path ".")
+
+(require 'org-blog)
+
+(describe "org-blog"
+
+  (before-all
+    (-if-let (password (getenv "PASSWORD"))
+        (setq org-blog-test-password (getenv "PASSWORD"))))
+  
+  (describe "org-blog-mode"
+    (it "can turn on the mode"
+      (with-temp-buffer
+        (org-blog-mode)
+        (expect org-blog-mode :to-be t))))
+
+  (describe "org-blog-get-name"
+    (it "can get the blog name from a blog spec"
+      (-let [name (org-blog-get-name '((:blog . "foo")))]
+        (expect name :to-equal "foo")))
+
+    (it "can get the blog name from an alist"
+      (-let [org-blog-alist '(("bar"))]
+        (expect (org-blog-get-name) :to-equal "bar")))
+
+    (it "can get the blog name from completing-read"
+      (spy-on 'completing-read :and-return-value "baz")
+      (expect (org-blog-get-name) :to-equal "baz"))
+
+    (it "can get the blog name from default"
+      (spy-on 'completing-read :and-return-value "")
+      (expect (org-blog-get-name) :to-equal "unknown")))
+
+  (describe "org-blog-new"
+    (before-each
+      (spy-on 'current-time :and-return-value (current-time)))
+    (after-each
+      (kill-buffer (current-buffer)))
+  
+    (it "can create a new blog post from an alist"
+      (let ((org-blog-alist '(("bar")))
+            (post-string (concat "\
 #+POST_BLOG: bar
 #+POST_CATEGORY: 
-#+DATE: [" (format-time-string "%Y-%m-%d %a %R" test-time) "]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R") "]
 #+DESCRIPTION: 
 #+KEYWORDS: 
 #+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
 ")))
-    (org-blog-new)
-    (should (string= (org-no-properties (buffer-string)) post-string))))
-(ert-deftest ob-test-org-blog-new-from-completing-read ()
-  "Test creating a new blog post using completing-read"
-  (with-mock
-    (stub completing-read => "baz")
-    (let ((post-string (concat "\
+        (org-blog-new)
+        (expect (org-no-properties (buffer-string)) :to-equal post-string)))
+
+    (it "can create a new blog post using completing-read"
+      (spy-on 'completing-read :and-return-value "baz")
+      (let ((post-string (concat "\
 #+POST_BLOG: baz
 #+POST_CATEGORY: 
-#+DATE: [" (format-time-string "%Y-%m-%d %a %R" test-time) "]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R") "]
 #+DESCRIPTION: 
 #+KEYWORDS: 
 #+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
 ")))
-      (org-blog-new)
-      (should (string= (org-no-properties (buffer-string)) post-string)))))
-(ert-deftest ob-test-org-blog-new-from-default ()
-  "Test creating a new blog post with a default"
-  (with-mock
-    (stub completing-read => "")
-    (let ((org-blog-alist '(("bar")))
-          (post-string (concat "\
+        (org-blog-new)
+        (expect (org-no-properties (buffer-string)) :to-equal post-string)))
+
+    (it "can createa new blog post with a default"
+      (spy-on 'completing-read :and-return-value "bar")
+      (let ((org-blog-alist '(("bar")))
+            (post-string (concat "\
 #+POST_BLOG: bar
 #+POST_CATEGORY: 
-#+DATE: [" (format-time-string "%Y-%m-%d %a %R" test-time) "]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R") "]
 #+DESCRIPTION: 
 #+KEYWORDS: 
 #+POST_STATUS: publish
 #+TITLE: 
 #+POST_TYPE: post
 ")))
-      (org-blog-new)
-      (should (string= (org-no-properties (buffer-string)) post-string)))))
-(ert-deftest ob-test-org-blog-post-to-blog ()
-  "Test getting the blog information from a blog post"
-  (unless (boundp 'org-blog-test-password)
-    (ert-skip "No password set"))
-  (let ((org-blog-alist `(("bar" . ((:engine . "wp")
-                                    (:xmlrpc . "https://wordpress.com/xmlrpc.php")
-                                    (:username . "mdorman@ironicdesign.com")
-                                    (:password . ,org-blog-test-password)))))
-        (final-blog-param `((:blog-id . "46183217")
-                            (:engine . "wp")
-                            (:password . ,org-blog-test-password)
-                            (:username . "mdorman@ironicdesign.com")
-                            (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
-    (org-blog-new)
-    (should (equal (org-blog-post-to-blog (org-blog-buffer-extract-post)) final-blog-param))))
-(ert-deftest ob-test-org-blog-save ()
-  "Transfer from buffers to posts and back again"
-  (unless (boundp 'org-blog-test-password)
-    (ert-skip "No password set"))
-  (let* ((blog (org-blog-wp-params `((:blog-id . 46183217)
-                                     (:directory . "~/org/blogging")
-                                     (:engine . "wp")
-                                     (:password . ,org-blog-test-password)
-                                     (:username . "mdorman@ironicdesign.com")
-                                     (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
-         (org-blog-alist (list (cons "testing" blog))))
-    (with-temp-buffer
-      (insert (concat "\
+        (org-blog-new)
+        (expect (org-no-properties (buffer-string)) :to-equal post-string))))
+
+  (describe "org-blog-post-to-blog"
+
+    (after-each
+      (kill-buffer (current-buffer)))
+
+    (it "can get the blog information from a blog post"
+      (unless (boundp 'org-blog-test-password)
+        (signal 'buttercup-pending t))
+      (let ((org-blog-alist `(("bar" . ((:engine . "wp")
+                                        (:xmlrpc . "https://wordpress.com/xmlrpc.php")
+                                        (:username . "mdorman@ironicdesign.com")
+                                        (:password . ,org-blog-test-password)))))
+            (final-blog-param `((:blog-id . "46183217")
+                                (:engine . "wp")
+                                (:password . ,org-blog-test-password)
+                                (:username . "mdorman@ironicdesign.com")
+                                (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
+        (org-blog-new)
+        (expect (org-blog-post-to-blog (org-blog-buffer-extract-post)) :to-equal final-blog-param))))
+
+  (describe "org-blog-save"
+    (it "can transfer from buffers to posts and back again"
+      (unless (boundp 'org-blog-test-password)
+        (signal 'buttercup-pending t))
+      (let* ((blog (org-blog-wp-params `((:blog-id . 46183217)
+                                         (:directory . "~/org/blogging")
+                                         (:engine . "wp")
+                                         (:password . ,org-blog-test-password)
+                                         (:username . "mdorman@ironicdesign.com")
+                                         (:xmlrpc . "https://orgblogtest.wordpress.com/xmlrpc.php"))))
+             (org-blog-alist (list (cons "testing" blog))))
+        (with-temp-buffer
+          (insert (concat "\
 #+POST_BLOG: testing
 #+POST_CATEGORY: testing, repetitious
-#+DATE: [" (format-time-string "%Y-%m-%d %a %R" test-time) "]
+#+DATE: [" (format-time-string "%Y-%m-%d %a %R") "]
 #+DESCRIPTION: This is an automated test-post
 #+KEYWORDS: testing, automation, emacs rocks
 #+POST_STATUS: publish
@@ -125,9 +143,9 @@ its line
 breaks
 #+END_VERSE
 "))
-      (org-blog-save)
-      (goto-char (point-max))
-      (insert "\n\nThis is a little additional text")
-      (let ((pre-save (buffer-string)))
-        (org-blog-save)
-        (should (equal pre-save (buffer-string)))))))
+          (org-blog-save)
+          (goto-char (point-max))
+          (insert "\n\nThis is a little additional text")
+          (let ((pre-save (buffer-string)))
+            (org-blog-save)
+            (expect pre-save :to-equal (buffer-string))))))))
