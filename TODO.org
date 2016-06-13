@@ -1,3 +1,4 @@
+#+CATEGORY: org-blog
 * DONE Make it so the tests only prompt for the test blog password once
   That's the only thing that annoys me about running the tests right now.
 * DONE Convert to be compatible with the Org 8.0 exporter
