@@ -35,7 +35,7 @@
 ;; `org-blog-post-mapping' structure.
 
 (defconst org-blog-buffer-options-alist
-  (org-reduce
+  (cl-reduce
    (lambda (l i)
      (let ((field (plist-get (cdr i) :to-buffer)))
        ;; Only add our fields, distinguised by the POST_ prefix
@@ -99,7 +99,7 @@ retain the maximum flexibility for further transformation."
         (attrs
          (org-export-get-environment 'blog)))
     (sort
-     (org-reduce
+     (cl-reduce
       (lambda (l i)
         (let* ((v (plist-get attrs (car i)))
                (filter (plist-get (cdr i) :from-buffer))

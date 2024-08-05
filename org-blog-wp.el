@@ -60,7 +60,7 @@ structure to differentiate them.
 For convenience in testing and inspection, the resulting alist is
 sorted."
   (sort
-   (org-reduce
+   (cl-reduce
     (lambda (wp new)
       (let ((k (car new))
             (v (cdr new)))
@@ -109,7 +109,7 @@ properly.
 For convenience in testing and inspection, the resulting alist is
 sorted."
   (sort
-   (org-reduce
+   (cl-reduce
     (lambda (post new)
       "Do key and value transformations."
       (let ((k (car new))
@@ -146,7 +146,7 @@ glomming them onto the existing post."
   "Handle turning WordPress taxonomy lists into an alist.
 
 From here we can extract just the bits we need."
-  (org-reduce
+  (cl-reduce
    (lambda (lists term)
      (let ((name (cdr (assoc "name" term)))
            (taxonomy (cdr (assoc "taxonomy" term))))
@@ -192,7 +192,7 @@ function to make other calls."
                                                       (cdr (assoc "blogid" (car userblogs))))
                                                      ;; If there's mroe than one blog, ask the user to choose from them
                                                      (t
-                                                      (org-reduce
+                                                      (cl-reduce
                                                        (lambda (chosen entry)
                                                          (when (string= (cdr (assoc "blogName" result)) (cdr (assoc "blogName" entry)))
                                                            (setcdr (assq :xmlrpc complete) (cdr (assoc "xmlrpc" entry)))
