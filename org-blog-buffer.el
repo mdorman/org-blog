@@ -28,7 +28,7 @@
 (require 'ox-html)
 
 (eval-when-compile
-  (require 'cl))
+  (require 'cl-lib))
 
 ;; Construct the data structure to be handed to
 ;; org-export-define-derived-backend by folding over our

@@ -31,7 +31,7 @@
 (add-to-list 'org-blog-engine-alist '("wp"))
 
 (eval-when-compile
-  (require 'cl))
+  (require 'cl-lib))
 
 ;;;; Transformation to and from a post
 
