@@ -1,5 +1,7 @@
 #+TITLE: org-blog - simple blog writing and publishing using org-mode
 
+* This project has been archived, as I'm no longer using it and no longer prepared to support it.
+
 The purpose of org-blog is to allow you to use org-mode markup to
 create content for one or more blogs, keep local copies of articles,
 synchronize local and remote copies as much as is sensible, and do it
